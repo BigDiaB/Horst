@@ -1,0 +1,4 @@
+out: Horst_Projekt
+gxx: g++
+gxxflags: -Wall
+cxxflags:  
