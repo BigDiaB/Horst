@@ -1,0 +1,8 @@
+out: Horst_Projekt
+gxx: clang++
+gxxflags: -Wall
+cxxflags:
+src: ../src/main.cpp
+includes: ../libs/include
+libraries:
+c_type: cpp

@@ -1,0 +1,8 @@
+out: Horst
+gxx: clang++
+gxxflags: -Wall
+cxxflags:
+source: ../src/main.cpp
+includes:
+lib_path:
+libraries:
