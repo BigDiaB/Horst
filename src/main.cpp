@@ -238,12 +238,10 @@ int main(int argc, char* argv[])
             system("clear");
             String T = "Horst build ";
             T += String(argv[2]);
-            if (0 == system(T.c_str()))
-            {
-                T = "Horst run ";
-                T += String(argv[2]);
-                system(T.c_str());
-            }
+            system(T.c_str());
+            T = "Horst run ";
+            T += String(argv[2]);
+            system(T.c_str());
         }
         else if (String(argv[1]) == "build")
         {
