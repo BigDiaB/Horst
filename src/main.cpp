@@ -113,12 +113,14 @@ void print_keywords()
 {
     system("clear");
     version();
-    std::cout << "Keywords:"    << std::endl << "help, new, build, run" << std::endl << std::endl;
+    std::cout << "Keywords:"    << std::endl << "help, new, build, run, link, compile" << std::endl << std::endl;
     std::cout << "Struktur:"    << std::endl << "Argumente und eine kleine Beschreibung zu den Argumenten" << std::endl << "Beschreibung und Hinweise zur Nutzung" << std::endl << std::endl;
     std::cout << "help:"    	<< std::endl << "Keine Argumente, ruft diesen Bildschirm auf" << std::endl << std::endl;
     std::cout << "new:"     	<< std::endl << "Name des zu erstellenden Projektes (Vergiss nicht vorher zum richtigen Ort zu CD'en)" << std::endl << "Erstellt ein neues Projekt mit Hello, World!- Beispiel" << std::endl << std::endl;
     std::cout << "build:"       << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt" << std::endl << std::endl;
     std::cout << "run:"         << std::endl << "Name des Projektes" << std::endl << "Führt das Projekt aus. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" kompiliert wurde " << std::endl << std::endl;
+    std::cout << "link:"        << std::endl << "Name des Projektes" << std::endl << "Linked das Program. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" oder \"Horst compile proj\" kompiliert wurde " << std::endl << std::endl;
+    std::cout << "compile:"     << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt." << std::endl << std::endl;
 }
 
 void atrr_stuff(String filename, Vector<String>& attributes,char* argv[])
@@ -177,27 +179,17 @@ int main(int argc, char* argv[])
     
     exe_path();
     working_dir();
-    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES && COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
+    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES");
+    commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a EXECUTABLE_NAME.o");
+//    commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES");
     commands.push_back("lldb -b -o run -f " + String(working_dir) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME");
     Vector<String> attributes;
     String attributes_make = " ";
-    if (String(argv[1]) == "build" || String(argv[1]) == "run" || String(argv[1]) == "clean")
+    if (String(argv[1]) == "build" || String(argv[1]) == "run" || String(argv[1]) == "clean" || String(argv[1]) == "link" || String(argv[1]) == "compile" || String(argv[1]) == "lib")
     {
         
         atrr_stuff(argv[2], attributes, argv);
-        bool has_libs = true;
-        for (int i = 0; i < attributes.size(); i++)
-            if (attributes[i].find("lib_path:") != String::npos)
-            {
-                String temp = attributes[i];
-                replace(temp,"lib_path:","");
-                if (temp.length() > 3)
-                    has_libs = true;
-            }
-        
-        if (!has_libs)
-            commands[0] = "COMPILER_NAME -g -Wall INCLUDES SOURCE -o EXECUTABLE_NAME";
-        
         prepare_var(attributes,commands, argc, argv);
     }
     
@@ -233,17 +225,29 @@ int main(int argc, char* argv[])
             T += argv[2];
             system(T.c_str());
         }
-        else if (String(argv[1]) == "do")
+        else if (String(argv[1]) == "lib")
         {
-            system("clear");
-            String T = "Horst build ";
-            T += String(argv[2]);
-            system(T.c_str());
-            T = "Horst run ";
-            T += String(argv[2]);
+            std::cout << commands[2] << std::endl;
+            String T = "cd ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build";
+            T += " &&" + commands[2];
             system(T.c_str());
         }
-        else if (String(argv[1]) == "build")
+        else if (String(argv[1]) == "link")
+        {
+            std::cout << commands[1] << std::endl;
+            String T = "cd ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build";
+            T += " &&" + commands[1];
+            system(T.c_str());
+        }
+        else if (String(argv[1]) == "compile")
         {
             std::cout << commands[0] << std::endl;
             String T = "cd ";
@@ -254,6 +258,17 @@ int main(int argc, char* argv[])
             T += " &&" + commands[0];
             system(T.c_str());
         }
+        else if (String(argv[1]) == "build")
+        {
+            std::cout << commands[0] + "\n" + commands[1] << std::endl;
+            String T = "cd ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build";
+            T += " &&" + commands[0] + " && " + commands[1];
+            system(T.c_str());
+        }
         else if (String(argv[1]) == "run")
         {
             String T = "cd ";
@@ -261,7 +276,7 @@ int main(int argc, char* argv[])
             T += "/";
             T += argv[2];
             T += "/build";
-            T += "&& " + commands[1];
+            T += "&& " + commands[3];
             system(T.c_str());
         }
         else if (String(argv[1]) == "environment")
