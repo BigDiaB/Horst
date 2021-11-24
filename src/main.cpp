@@ -22,9 +22,9 @@ void replace(String& input, String pattern, String replacement)
 #define NAME 5
 #define NUM_ATTRIBUTES 8
 
-#define VERSION_MAJOR 7
-#define VERSION_MINOR 2
-#define VERSION_PATCH 1
+#define VERSION_MAJOR 9
+#define VERSION_MINOR 3
+#define VERSION_PATCH 6
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
     commands.push_back("lldb -b -o run -f " + String(working_dir) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME");
     Vector<String> attributes;
     String attributes_make = " ";
-    if (String(argv[1]) == "build" || String(argv[1]) == "run" || String(argv[1]) == "clean" || String(argv[1]) == "link" || String(argv[1]) == "compile" || String(argv[1]) == "lib")
+    if (String(argv[1]) == "build" || String(argv[1]) == "run" || String(argv[1]) == "clean" || String(argv[1]) == "link" || String(argv[1]) == "compile" || String(argv[1]) == "lib" || String(argv[1]) == "do")
     {
         
         atrr_stuff(argv[2], attributes, argv);
@@ -278,6 +278,15 @@ int main(int argc, char* argv[])
             T += "/build";
             T += "&& " + commands[3];
             system(T.c_str());
+        }
+        else if (String(argv[1]) == "do")
+        {
+            String T = "Horst build ";
+            T += argv[2];
+            T += " && Horst run ";
+            T += argv[2];
+            system(T.c_str());
+//            std::cout << T << std::endl;
         }
         else if (String(argv[1]) == "environment")
         {
