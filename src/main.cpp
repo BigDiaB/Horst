@@ -23,8 +23,8 @@ void replace(String& input, String pattern, String replacement)
 #define NUM_ATTRIBUTES 8
 
 #define VERSION_MAJOR 9
-#define VERSION_MINOR 3
-#define VERSION_PATCH 6
+#define VERSION_MINOR 4
+#define VERSION_PATCH 2
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -113,14 +113,16 @@ void print_keywords()
 {
     system("clear");
     version();
-    std::cout << "Keywords:"    << std::endl << "help, new, build, run, link, compile" << std::endl << std::endl;
-    std::cout << "Struktur:"    << std::endl << "Argumente und eine kleine Beschreibung zu den Argumenten" << std::endl << "Beschreibung und Hinweise zur Nutzung" << std::endl << std::endl;
-    std::cout << "help:"    	<< std::endl << "Keine Argumente, ruft diesen Bildschirm auf" << std::endl << std::endl;
-    std::cout << "new:"     	<< std::endl << "Name des zu erstellenden Projektes (Vergiss nicht vorher zum richtigen Ort zu CD'en)" << std::endl << "Erstellt ein neues Projekt mit Hello, World!- Beispiel" << std::endl << std::endl;
-    std::cout << "build:"       << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt" << std::endl << std::endl;
-    std::cout << "run:"         << std::endl << "Name des Projektes" << std::endl << "Führt das Projekt aus. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" kompiliert wurde " << std::endl << std::endl;
-    std::cout << "link:"        << std::endl << "Name des Projektes" << std::endl << "Linked das Program. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" oder \"Horst compile proj\" kompiliert wurde " << std::endl << std::endl;
-    std::cout << "compile:"     << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt." << std::endl << std::endl;
+    std::cout << "Keywords:"   << std::endl << "help, new, build, run, link, compile, do" << std::endl << std::endl;
+    std::cout << "Struktur:"   << std::endl << "Argumente und eine kleine Beschreibung zu den Argumenten" << std::endl << "Beschreibung und Hinweise zur Nutzung" << std::endl << std::endl;
+    std::cout << "help:"       << std::endl << "Keine Argumente, ruft diesen Bildschirm auf" << std::endl << std::endl;
+    std::cout << "new:"        << std::endl << "Name des zu erstellenden Projektes (Vergiss nicht vorher zum richtigen Ort zu CD'en)" << std::endl << "Erstellt ein neues Projekt mit Hello, World!- Beispiel" << std::endl << std::endl;
+    std::cout << "build:"      << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt" << std::endl << std::endl;
+    std::cout << "run:"        << std::endl << "Name des Projektes" << std::endl << "Führt das Projekt aus. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" kompiliert wurde " << std::endl << std::endl;
+    std::cout << "do:"         << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt genau wie mit \"Horst build proj\" und führt es danach genau wie \"Horst run proj\" aus" << std::endl << std::endl;
+    std::cout << "link:"       << std::endl << "Name des Projektes" << std::endl << "Linked das Program. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" oder \"Horst compile proj\" kompiliert wurde " << std::endl << std::endl;
+    std::cout << "compile:"    << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt." << std::endl << std::endl;
+    std::cout << "lib:"        << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt in eine statische Library (Vergiss nicht vorher \"int main()\" aus deinem Code zu entfernen, sonst gibt es nachher \"duplicate symbols\"-Error!)" << std::endl << std::endl;
 }
 
 void atrr_stuff(String filename, Vector<String>& attributes,char* argv[])
@@ -155,7 +157,7 @@ void prepare_var(Vector<String> attributes, Vector<String>& commands, int argc, 
             if (vars[i] == "EXECUTABLE_NAME")
                 replace(temp[i]," ","");
             replace(commands[j], vars[i],temp[i]);
-            if (first && argc > 2 && String(argv[1]) == "build")
+            if (first && argc > 2 && (String(argv[1]) == "build" || String(argv[1]) == "do"))
                 std::cout << vars[i] << ": " << attributes[i] << std::endl;
         }
         first = false;
@@ -165,7 +167,7 @@ void prepare_var(Vector<String> attributes, Vector<String>& commands, int argc, 
 int main(int argc, char* argv[])
 {
     version();
-    if (argc == 1)
+    if (argc == 1 || String(argv[1]) == "help")
     {
         print_keywords();
         exit(0);
@@ -281,12 +283,21 @@ int main(int argc, char* argv[])
         }
         else if (String(argv[1]) == "do")
         {
-            String T = "Horst build ";
+            std::cout << commands[0] << std::endl;
+            String T = "cd ";
+            T += working_dir;
+            T += "/";
             T += argv[2];
-            T += " && Horst run ";
-            T += argv[2];
+            T += "/build";
+            T += " &&" + commands[0] + " && " + commands[1];
             system(T.c_str());
-//            std::cout << T << std::endl;
+            T = "cd ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build";
+            T += "&& " + commands[3];
+            system(T.c_str());
         }
         else if (String(argv[1]) == "environment")
         {
