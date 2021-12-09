@@ -24,7 +24,7 @@ void replace(String& input, String pattern, String replacement)
 
 #define VERSION_MAJOR 9
 #define VERSION_MINOR 4
-#define VERSION_PATCH 2
+#define VERSION_PATCH 3
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -283,7 +283,7 @@ int main(int argc, char* argv[])
         }
         else if (String(argv[1]) == "do")
         {
-            std::cout << commands[0] << std::endl;
+            std::cout << commands[0] + "\n" + commands[1] << std::endl;
             String T = "cd ";
             T += working_dir;
             T += "/";
