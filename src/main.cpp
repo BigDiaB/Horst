@@ -23,8 +23,8 @@ void replace(String& input, String pattern, String replacement)
 #define NUM_ATTRIBUTES 8
 
 #define VERSION_MAJOR 9
-#define VERSION_MINOR 4
-#define VERSION_PATCH 3
+#define VERSION_MINOR 5
+#define VERSION_PATCH 0
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -269,6 +269,11 @@ int main(int argc, char* argv[])
             T += argv[2];
             T += "/build";
             T += " &&" + commands[0] + " && " + commands[1];
+            T += " && rm -f ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build/*.o";
             system(T.c_str());
         }
         else if (String(argv[1]) == "run")
@@ -279,6 +284,7 @@ int main(int argc, char* argv[])
             T += argv[2];
             T += "/build";
             T += "&& " + commands[3];
+
             system(T.c_str());
         }
         else if (String(argv[1]) == "do")
@@ -290,6 +296,11 @@ int main(int argc, char* argv[])
             T += argv[2];
             T += "/build";
             T += " &&" + commands[0] + " && " + commands[1];
+            T += " && rm -f ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build/*.o";
             system(T.c_str());
             T = "cd ";
             T += working_dir;
