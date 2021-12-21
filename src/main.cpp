@@ -198,7 +198,8 @@ int main(int argc, char* argv[])
     commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
     commands.push_back("COMPILER_NAME -c COMPILER_FLAGS -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a EXECUTABLE_NAME.o");
 //    commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES");
-    commands.push_back("lldb -b -o run -f " + String(working_dir) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME");
+    // commands.push_back("lldb -b -o run -f " + String(working_dir) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME");
+    commands.push_back("./EXECUTABLE_NAME");
     Vector<String> attributes;
     String attributes_make = " ";
     if (String(argv[1]) == "build" || String(argv[1]) == "run" || String(argv[1]) == "clean" || String(argv[1]) == "link" || String(argv[1]) == "compile" || String(argv[1]) == "lib" || String(argv[1]) == "do")
