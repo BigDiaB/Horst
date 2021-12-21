@@ -4,13 +4,11 @@
 #include <sstream>
 #include <regex>
 #include <vector>
-#include <mach-o/dyld.h>
 #include <unistd.h>
 
 #define String std::string
 #define Vector std::vector
 
-#define exe_path() char exe_path[1024];uint32_t size = sizeof(exe_path);_NSGetExecutablePath(exe_path, &size)
 #define working_dir() char working_dir[1024];getcwd(working_dir,1024)
 
 void replace(String& input, String pattern, String replacement)
@@ -178,8 +176,23 @@ int main(int argc, char* argv[])
         system("cd Horst/build && clang++ ../src/main.cpp -o Horst && cd ../../");
         return 0;
     }
+
+    char path_save[256];
+    char *p;
+    char exe_path[2056];
+
+    if(!(p = strrchr(argv[0], '/')))
+        getcwd(exe_path, 2056);
+    else
+    {
+        *p = '\0';
+        getcwd(path_save, 2056);
+        chdir(argv[0]);
+        getcwd(exe_path, 2056);
+        chdir(path_save);
+    }
+
     
-    exe_path();
     working_dir();
     commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES");
     commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
@@ -203,8 +216,7 @@ int main(int argc, char* argv[])
             String T;
             T = "cp -r ";
             T += exe_path;
-            for (int i = 0; i < NAME + 6; i++)
-                T.pop_back();
+            T += "/Horst/";
             T += "prep ";
             T += working_dir;
             T += "/";
