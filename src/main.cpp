@@ -22,7 +22,7 @@ void replace(String& input, String pattern, String replacement)
 
 #define VERSION_MAJOR 9
 #define VERSION_MINOR 5
-#define VERSION_PATCH 0
+#define VERSION_PATCH 1
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
