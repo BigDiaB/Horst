@@ -21,7 +21,7 @@ void replace(String& input, String pattern, String replacement)
 #define NUM_ATTRIBUTES 8
 
 #define VERSION_MAJOR 9
-#define VERSION_MINOR 5
+#define VERSION_MINOR 6
 #define VERSION_PATCH 1
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
@@ -343,12 +343,17 @@ int main(int argc, char* argv[])
                 if (input == "exit")
                 {
                     system("clear");
-                    return 0;
+                    done = true;
+                    version();
+                    print_keywords();
                 }
-                std::cout << input << std::endl;
-                command = "Horst " + input;
-                system(command.c_str());
-                std::getline(std::cin,input);
+                else
+                {
+                    std::cout << input << std::endl;
+                    command = "Horst " + input;
+                    system(command.c_str());
+                    std::getline(std::cin,input);
+                }
                 
             }
         }
