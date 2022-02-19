@@ -1,8 +1,8 @@
 
 
 gxx: clang
-gxxflags: -Wall
-cxxflags: -g -std=c89
+gxxflags: -O0
+cxxflags: -g -std=c89 -W -Wall -Wextra
 out: Horst-Project
 includes: -I../libs/include
 lib_path: -L../libs/lib
