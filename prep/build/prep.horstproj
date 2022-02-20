@@ -1,10 +1,11 @@
-
-
+out: Horst-Projekt
 gxx: clang
-gxxflags: -O0
-cxxflags: -g -std=c89 -W -Wall -Wextra
-out: Horst-Project
-includes: -I../libs/include
-lib_path: -L../libs/lib
-libraries:
+gxxflags:
+cxxflags: -W -Wall -Wextra
 source: ../src/main.c
+includes:
+lib_path:
+libraries:
+debugger: none
+dependencies:
+d_types:

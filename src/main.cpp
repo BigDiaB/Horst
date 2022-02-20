@@ -17,8 +17,7 @@ void replace(String& input, String pattern, String replacement)
     input = std::regex_replace(input,pat, replacement.c_str());
 }
 
-#define NAME 5
-#define NUM_ATTRIBUTES 8
+#define NUM_ATTRIBUTES 11
 
 #define VERSION_MAJOR 9
 #define VERSION_MINOR 6
@@ -26,12 +25,12 @@ void replace(String& input, String pattern, String replacement)
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
-String vars[NUM_ATTRIBUTES] = {
-    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME"
+String vars[] = {
+    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME", "DEBUGGER", "DEPENDENCIES", "DEPENDENCY_TYPE"
 };
-String vals[NUM_ATTRIBUTES];
+
 String attr_template[] = {
-    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: "
+    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "debugger: ", "dependencies: ", "d_type: "
 };
 
 void file_to_string(String filename, String& doc)
@@ -78,7 +77,7 @@ void string_to_vector(String doc, Vector<String>& vec)
 
 void lines_to_attributes(Vector<String> lines,Vector<String>& attributes)
 {
-    for (int i = 0; i < lines.size(); i++)
+    for (int i = 0; i < (int)lines.size(); i++)
     {
         String t = (lines[i].substr(lines[i].find(": ") + 1));
         attributes.push_back(t);
@@ -120,10 +119,11 @@ void print_keywords()
     std::cout << "do:"         << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt genau wie mit \"Horst build proj\" und führt es danach genau wie \"Horst run proj\" aus" << std::endl << std::endl;
     std::cout << "link:"       << std::endl << "Name des Projektes" << std::endl << "Linked das Program. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" oder \"Horst compile proj\" kompiliert wurde " << std::endl << std::endl;
     std::cout << "compile:"    << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt." << std::endl << std::endl;
-    std::cout << "lib:"        << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt in eine statische Library (Vergiss nicht vorher \"int main()\" aus deinem Code zu entfernen, sonst gibt es nachher \"duplicate symbols\"-Error!)" << std::endl << std::endl;
+    std::cout << "dlib:"       << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt in eine dynamische Library (Vergiss nicht vorher \"int main()\" aus deinem Code zu entfernen, sonst gibt es nachher \"duplicate symbols\"-Error!)" << std::endl << std::endl;
+    std::cout << "slib:"       << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt in eine statische Library (Vergiss nicht vorher \"int main()\" aus deinem Code zu entfernen, sonst gibt es nachher \"duplicate symbols\"-Error!)" << std::endl << std::endl;
 }
 
-void atrr_stuff(String filename, Vector<String>& attributes,char* argv[])
+void atrr_stuff(String filename, Vector<String>& attributes)
 {
     Vector<String> proj_data;
     String doc;
@@ -137,18 +137,18 @@ Vector<String> commands;
 void prepare_var(Vector<String> attributes, Vector<String>& commands, int argc, char* argv[])
 {
     Vector<String> temp;
-    for (int i = 0; i < attributes.size(); i++)
+    for (int i = 0; i < (int)attributes.size(); i++)
     {
         temp.push_back(attributes[i]);
     }
-    for (int i = 0; i < temp.size(); i++)
+    for (int i = 0; i < (int)temp.size(); i++)
     {
         replace(temp[i],attr_template[i],"");
     }
     
     bool first = true;
     
-    for (int j = 0; j < commands.size(); j++)
+    for (int j = 0; j < (int)commands.size(); j++)
     {
         for (int i = 0; i < NUM_ATTRIBUTES; i++)
         {
@@ -162,6 +162,165 @@ void prepare_var(Vector<String> attributes, Vector<String>& commands, int argc, 
         
     }
 }
+
+
+void add_to_proj_list(char* name)
+{
+    std::ifstream file;
+    file.open("Horst/build/proj_list.horstproj");
+
+    String line,doc;
+    
+    while (!file.eof() and file.is_open() and file)
+    {
+        std::getline(file, line);
+        doc += line + "\n";
+    }
+    doc += String(name);
+
+    file.close();
+
+    std::ofstream file_o;
+    file_o.open("Horst/build/proj_list.horstproj");
+
+    file_o << doc;
+
+    file_o.close();
+
+}
+
+void remove_from_proj_list(char* name)
+{
+    std::ifstream file;
+    file.open("Horst/build/proj_list.horstproj");
+
+    String line,doc;
+    
+    while (!file.eof() and file.is_open() and file)
+    {
+        std::getline(file, line);
+        doc += line;
+    }
+
+    file.close();
+
+    replace(doc,String(name),"");
+
+    std::ofstream file_o;
+    file_o.open("Horst/build/proj_list.horstproj");
+
+    file_o << doc;
+
+    file_o.close();
+}
+
+bool check_in_proj_list(String name)
+{
+    std::ifstream file;
+    String line,doc;
+    file.open("Horst/build/proj_list.horstproj");
+    while (!file.eof() and file.is_open() and file)
+    {
+        std::getline(file, line);
+        replace(line,"\n","");
+        if (strcmp(name.c_str(),line.c_str()) == 0)
+            return true;
+    }
+    return false;
+}
+
+bool use_lldb(Vector<String> attr)
+{
+    return (strstr(attr[8].c_str(),"lldb") != NULL);
+}
+
+void copy_dependencies(Vector<String> attributes, char* target)
+{
+    Vector<String> dependencies;
+    Vector<String> types;
+
+    std::stringstream ds(attributes[9]);
+    std::stringstream dt(attributes[9]);
+    
+    while (ds.good()) {
+        String substr;
+        std::getline(ds, substr, ' ');
+        dependencies.push_back(substr);
+    }
+
+    while (dt.good()) {
+        String substr;
+        std::getline(dt, substr, ' ');
+        types.push_back(substr);
+    }
+
+    for (int i = 1; i < (int)dependencies.size(); i++)
+    {
+        if (dependencies[i] == " " || dependencies[i] == "")
+            continue;
+        if (!check_in_proj_list(dependencies[i]))
+        {
+            std::cerr << "Konnte die Dependency in der Projekt-Liste nicht finden!: " << dependencies[i] << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        String T = "cd && if test -d ";
+        T += String(target);
+        T += "/libs/include/";
+        T += dependencies[i];
+        T += "; then ";
+        T += "mkdir ";
+        T += String(target);
+        T += "/libs/include/";
+        T += dependencies[i];
+        T += "; fi";
+        T += " && ";
+        T += "cp ";
+        T += dependencies[i];
+        T += "/src/*.h ";
+        T += String(target);
+        T += "/libs/include/";
+        T += dependencies[i];
+        system(T.c_str());
+
+        if (types[i] == "dynamic")
+        {
+            String T = "cd && Horst dlib ";
+            T += dependencies[i];
+            T += " && ";
+            T += "cp ";
+            T += dependencies[i];
+            T += "/build/lib";
+            T += dependencies[i];
+            T += ".dylib ";
+            T += String(target);
+            T += "/libs/lib/lib";
+            T += dependencies[i];
+            T += ".dylib";
+            system(T.c_str());
+        }
+        else
+        {
+            String T = "cd && Horst slib ";
+            T += dependencies[i];
+            T += " && ";
+            T += "cp ";
+            T += dependencies[i];
+            T += "/build/lib";
+            T += dependencies[i];
+            T += ".a ";
+            T += String(target);
+            T += "/libs/lib/lib";
+            T += dependencies[i];
+            T += ".a";
+            system(T.c_str());
+        }
+    }
+
+}
+
+// #define DEBUG
+
 int main(int argc, char* argv[])
 {
     version();
@@ -196,16 +355,23 @@ int main(int argc, char* argv[])
     working_dir();
     commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES");
     commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
-    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a EXECUTABLE_NAME.o");
-//    commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES");
-    // commands.push_back("lldb -b -o run -f " + String(working_dir) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME");
-    commands.push_back("./EXECUTABLE_NAME");
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a EXECUTABLE_NAME.o"); //static library
+    commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
+    commands.push_back("lldb -b -o run -f " + String(working_dir) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME"); //execute with lldb
+    commands.push_back("./EXECUTABLE_NAME");    //execute without lldb
     Vector<String> attributes;
     String attributes_make = " ";
-    if (String(argv[1]) == "build" || String(argv[1]) == "run" || String(argv[1]) == "clean" || String(argv[1]) == "link" || String(argv[1]) == "compile" || String(argv[1]) == "lib" || String(argv[1]) == "do")
+
+
+    #ifndef DEBUG
+    if (String(argv[1]) != "new" && String(argv[1]) != "environment" && String(argv[1]) != "delete")
     {
-        
-        atrr_stuff(argv[2], attributes, argv);
+        if (!check_in_proj_list(String(argv[2])))
+        {
+            std::cerr << "Projekt \"" << argv[2] << "\"" << " ist nicht in der Projekt-Liste!" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        atrr_stuff(argv[2], attributes);
         prepare_var(attributes,commands, argc, argv);
     }
     
@@ -239,9 +405,33 @@ int main(int argc, char* argv[])
             T = "Horst build ";
             T += argv[2];
             system(T.c_str());
+
+            add_to_proj_list(argv[2]);
         }
-        else if (String(argv[1]) == "lib")
+        else if (String(argv[1]) == "delete")
         {
+            String T;
+            T = "rm -rf ";
+            T += argv[2];
+            system(T.c_str());
+
+            remove_from_proj_list(argv[2]);
+        }
+        else if (String(argv[1]) == "dlib")
+        {
+            copy_dependencies(attributes,argv[2]);
+            std::cout << commands[3] << std::endl;
+            String T = "cd ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build";
+            T += " &&" + commands[3];
+            system(T.c_str());
+        }
+        else if (String(argv[1]) == "slib")
+        {
+            copy_dependencies(attributes,argv[2]);
             std::cout << commands[2] << std::endl;
             String T = "cd ";
             T += working_dir;
@@ -275,6 +465,7 @@ int main(int argc, char* argv[])
         }
         else if (String(argv[1]) == "build")
         {
+            copy_dependencies(attributes,argv[2]);
             std::cout << commands[0] + "\n" + commands[1] << std::endl;
             String T = "cd ";
             T += working_dir;
@@ -282,11 +473,11 @@ int main(int argc, char* argv[])
             T += argv[2];
             T += "/build";
             T += " &&" + commands[0] + " && " + commands[1];
-            // T += " && rm -f ";
-            // T += working_dir;
-            // T += "/";
-            // T += argv[2];
-            // T += "/build/*.o";
+            T += " && rm -f ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build/*.o";
             system(T.c_str());
         }
         else if (String(argv[1]) == "run")
@@ -296,7 +487,10 @@ int main(int argc, char* argv[])
             T += "/";
             T += argv[2];
             T += "/build";
-            T += "&& " + commands[3];
+            if (use_lldb(attributes))
+                T += "&& " + commands[4];
+            else
+                T += "&& " + commands[5];
 
             system(T.c_str());
         }
@@ -309,18 +503,21 @@ int main(int argc, char* argv[])
             T += argv[2];
             T += "/build";
             T += " &&" + commands[0] + " && " + commands[1];
-            // T += " && rm -f ";
-            // T += working_dir;
-            // T += "/";
-            // T += argv[2];
-            // T += "/build/*.o";
+            T += " && rm -f ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build/*.o";
             system(T.c_str());
             T = "cd ";
             T += working_dir;
             T += "/";
             T += argv[2];
             T += "/build";
-            T += "&& " + commands[3];
+            if (use_lldb(attributes))
+                T += "&& " + commands[4];
+            else
+                T += "&& " + commands[5];
             system(T.c_str());
         }
         else if (String(argv[1]) == "environment")
@@ -363,5 +560,6 @@ int main(int argc, char* argv[])
             exit(EXIT_SUCCESS);
         }
     }
-    return 0;
+    #endif
+    return EXIT_SUCCESS;
 }

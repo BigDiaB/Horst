@@ -1,8 +1,11 @@
-out: Horst
 gxx: clang++
-gxxflags: -Wall
-cxxflags:
-source: ../src/main.cpp
-includes:
-lib_path:
+gxxflags: -O0
+cxxflags: -g -W -Wall -Wextra
+out: Horst-Projekt
+includes: -I../libs/include
+lib_path: -L../libs/lib
 libraries:
+source: ../src/main.cpp
+debugger: none
+dependencies:
+d_type:
