@@ -19,8 +19,8 @@ void replace(String& input, String pattern, String replacement)
 
 #define NUM_ATTRIBUTES 11
 
-#define VERSION_MAJOR 9
-#define VERSION_MINOR 6
+#define VERSION_MAJOR 10
+#define VERSION_MINOR 0
 #define VERSION_PATCH 1
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
@@ -114,6 +114,7 @@ void print_keywords()
     std::cout << "Struktur:"   << std::endl << "Argumente und eine kleine Beschreibung zu den Argumenten" << std::endl << "Beschreibung und Hinweise zur Nutzung" << std::endl << std::endl;
     std::cout << "help:"       << std::endl << "Keine Argumente, ruft diesen Bildschirm auf" << std::endl << std::endl;
     std::cout << "new:"        << std::endl << "Name des zu erstellenden Projektes (Vergiss nicht vorher zum richtigen Ort zu CD'en)" << std::endl << "Erstellt ein neues Projekt mit Hello, World!- Beispiel" << std::endl << std::endl;
+    std::cout << "delete:"     << std::endl << "Name des zu löschenden Projektes (Vergiss nicht vorher zum richtigen Ort zu CD'en)" << std::endl << "Löscht ein vorhandenes Projekt" << std::endl << std::endl;
     std::cout << "build:"      << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt" << std::endl << std::endl;
     std::cout << "run:"        << std::endl << "Name des Projektes" << std::endl << "Führt das Projekt aus. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" kompiliert wurde " << std::endl << std::endl;
     std::cout << "do:"         << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt genau wie mit \"Horst build proj\" und führt es danach genau wie \"Horst run proj\" aus" << std::endl << std::endl;
@@ -519,40 +520,6 @@ int main(int argc, char* argv[])
             else
                 T += "&& " + commands[5];
             system(T.c_str());
-        }
-        else if (String(argv[1]) == "environment")
-        {
-            bool done = false;
-            String input;
-            String command;
-            while(!done)
-            {
-                system("clear");
-                version();
-                std::cout << "Keywords:"    << std::endl << "new, build, run, exit" << std::endl << std::endl;
-                std::cout << "Struktur:"    << std::endl << "Argumente und eine kleine Beschreibung zu den Argumenten" << std::endl << "Beschreibung und Hinweise zur Nutzung" << std::endl << std::endl;
-                std::cout << "new:"         << std::endl << "Name des zu erstellenden Projektes (Vergiss nicht vorher zum richtigen Ort zu CD'en)" << std::endl << "Erstellt ein neues Projekt mit Hello, World!- Beispiel" << std::endl << std::endl;
-                std::cout << "build:"       << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt" << std::endl << std::endl;
-                std::cout << "run:"         << std::endl << "Name des Projektes" << std::endl << "Führt das Projekt aus. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" kompiliert wurde " << std::endl << std::endl;
-                std::cout << "exit:"        << std::endl << "Braucht keine Argumente" << std::endl << "Beendet das Horst-Build-Environment" << std::endl << std::endl;
-                std::cout << "> ";
-                std::getline(std::cin,input);
-                if (input == "exit")
-                {
-                    system("clear");
-                    done = true;
-                    version();
-                    print_keywords();
-                }
-                else
-                {
-                    std::cout << input << std::endl;
-                    command = "Horst " + input;
-                    system(command.c_str());
-                    std::getline(std::cin,input);
-                }
-                
-            }
         }
         else
         {
