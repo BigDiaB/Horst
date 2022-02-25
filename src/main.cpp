@@ -20,8 +20,8 @@ void replace(String& input, String pattern, String replacement)
 #define NUM_ATTRIBUTES 11
 
 #define VERSION_MAJOR 10
-#define VERSION_MINOR 0
-#define VERSION_PATCH 1
+#define VERSION_MINOR 1
+#define VERSION_PATCH 2
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -171,20 +171,24 @@ void add_to_proj_list(char* name)
     file.open("Horst/build/proj_list.horstproj");
 
     String line,doc;
+    Vector<String> lines;
     
     while (!file.eof() and file.is_open() and file)
     {
         std::getline(file, line);
-        doc += line + "\n";
+        lines.push_back(line + "\n");
     }
-    doc += String(name);
 
     file.close();
+
+    lines.push_back(String(name));
+
 
     std::ofstream file_o;
     file_o.open("Horst/build/proj_list.horstproj");
 
-    file_o << doc;
+    for (int i = 0; i < (int)lines.size(); i++)
+        file_o << lines[i];   
 
     file_o.close();
 
@@ -196,34 +200,37 @@ void remove_from_proj_list(char* name)
     file.open("Horst/build/proj_list.horstproj");
 
     String line,doc;
+    Vector<String> lines;
     
     while (!file.eof() and file.is_open() and file)
     {
         std::getline(file, line);
-        doc += line;
+        if (!(0 == strcmp(name,line.c_str())))
+            lines.push_back(line + "\n");
     }
 
     file.close();
 
-    replace(doc,String(name),"");
+    replace(lines[lines.size() - 1],"\n","");
 
     std::ofstream file_o;
     file_o.open("Horst/build/proj_list.horstproj");
 
-    file_o << doc;
+    for (int i = 0; i < (int)lines.size(); i++)
+        file_o << lines[i];
 
     file_o.close();
 }
 
 bool check_in_proj_list(String name)
 {
+    return true;
     std::ifstream file;
     String line,doc;
     file.open("Horst/build/proj_list.horstproj");
     while (!file.eof() and file.is_open() and file)
     {
         std::getline(file, line);
-        replace(line,"\n","");
         if (strcmp(name.c_str(),line.c_str()) == 0)
             return true;
     }
@@ -365,7 +372,7 @@ int main(int argc, char* argv[])
 
 
     #ifndef DEBUG
-    if (String(argv[1]) != "new" && String(argv[1]) != "environment" && String(argv[1]) != "delete")
+    if (String(argv[1]) != "new" && String(argv[1]) != "delete")
     {
         if (!check_in_proj_list(String(argv[2])))
         {
@@ -381,6 +388,8 @@ int main(int argc, char* argv[])
     {
         if (String(argv[1]) == "new")
         {
+            add_to_proj_list(argv[2]);
+
             String T;
             T = "cp -r ";
             T += exe_path;
@@ -390,6 +399,7 @@ int main(int argc, char* argv[])
             T += "/";
             T += argv[2];
             system(T.c_str());
+
             T = "mv ";
             T += working_dir;
             T += "/";
@@ -403,20 +413,20 @@ int main(int argc, char* argv[])
             T += argv[2];
             T += ".horstproj";
             system(T.c_str());
+
             T = "Horst build ";
             T += argv[2];
             system(T.c_str());
 
-            add_to_proj_list(argv[2]);
         }
         else if (String(argv[1]) == "delete")
         {
+            remove_from_proj_list(argv[2]);
+
             String T;
             T = "rm -rf ";
             T += argv[2];
             system(T.c_str());
-
-            remove_from_proj_list(argv[2]);
         }
         else if (String(argv[1]) == "dlib")
         {
