@@ -264,26 +264,19 @@ void copy_dependencies(Vector<String> attributes, char* target)
 
     for (int i = 1; i < (int)dependencies.size(); i++)
     {
-        if (dependencies[i] == " " || dependencies[i] == "")
-            continue;
         if (!check_in_proj_list(dependencies[i]))
         {
             std::cerr << "Konnte die Dependency in der Projekt-Liste nicht finden!: " << dependencies[i] << std::endl;
-            exit(EXIT_FAILURE);
+            // exit(EXIT_FAILURE);
+            continue;
         }
 
-        String T = "cd && if test -d ";
+        String T = "mkdir ";
         T += String(target);
         T += "/libs/include/";
         T += dependencies[i];
-        T += "; then ";
-        T += "mkdir ";
-        T += String(target);
-        T += "/libs/include/";
-        T += dependencies[i];
-        T += "; fi";
-        T += " && ";
-        T += "cp ";
+        system(T.c_str());
+        T = "cp ";
         T += dependencies[i];
         T += "/src/*.h ";
         T += String(target);
