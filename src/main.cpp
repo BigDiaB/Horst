@@ -19,9 +19,9 @@ void replace(String& input, String pattern, String replacement)
 
 #define NUM_ATTRIBUTES 11
 
-#define VERSION_MAJOR 10
-#define VERSION_MINOR 1
-#define VERSION_PATCH 2
+#define VERSION_MAJOR 11
+#define VERSION_MINOR 0
+#define VERSION_PATCH 0
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -37,10 +37,9 @@ void file_to_string(String filename, String& doc)
 {
     char working_dir[1024];
     getcwd(working_dir,1024);
-    String dir = String(working_dir);
     
     std::ifstream file;
-    file.open(dir + "/" + String(filename) + "/build/" + String(filename) + ".horstproj");
+    file.open(String(working_dir) + "/" + String(filename) + "/build/" + String(filename) + ".horstproj");
     if (!file.is_open() and !file)
     {
         std::cerr << "Konnte die Projekt-Datei nicht finden!" << std::endl;
@@ -118,8 +117,6 @@ void print_keywords()
     std::cout << "build:"      << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt" << std::endl << std::endl;
     std::cout << "run:"        << std::endl << "Name des Projektes" << std::endl << "Führt das Projekt aus. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" kompiliert wurde " << std::endl << std::endl;
     std::cout << "do:"         << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt genau wie mit \"Horst build proj\" und führt es danach genau wie \"Horst run proj\" aus" << std::endl << std::endl;
-    std::cout << "link:"       << std::endl << "Name des Projektes" << std::endl << "Linked das Program. Funktioniert nicht, wenn es vorher nicht mit \"Horst build proj\" oder \"Horst compile proj\" kompiliert wurde " << std::endl << std::endl;
-    std::cout << "compile:"    << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt." << std::endl << std::endl;
     std::cout << "dlib:"       << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt in eine dynamische Library (Vergiss nicht vorher \"int main()\" aus deinem Code zu entfernen, sonst gibt es nachher \"duplicate symbols\"-Error!)" << std::endl << std::endl;
     std::cout << "slib:"       << std::endl << "Name des Projektes" << std::endl << "Kompiliert das Projekt in eine statische Library (Vergiss nicht vorher \"int main()\" aus deinem Code zu entfernen, sonst gibt es nachher \"duplicate symbols\"-Error!)" << std::endl << std::endl;
 }
@@ -445,28 +442,6 @@ int main(int argc, char* argv[])
             T += " &&" + commands[2];
             system(T.c_str());
         }
-        else if (String(argv[1]) == "link")
-        {
-            std::cout << commands[1] << std::endl;
-            String T = "cd ";
-            T += working_dir;
-            T += "/";
-            T += argv[2];
-            T += "/build";
-            T += " &&" + commands[1];
-            system(T.c_str());
-        }
-        else if (String(argv[1]) == "compile")
-        {
-            std::cout << commands[0] << std::endl;
-            String T = "cd ";
-            T += working_dir;
-            T += "/";
-            T += argv[2];
-            T += "/build";
-            T += " &&" + commands[0];
-            system(T.c_str());
-        }
         else if (String(argv[1]) == "build")
         {
             copy_dependencies(attributes,argv[2]);
@@ -477,6 +452,11 @@ int main(int argc, char* argv[])
             T += argv[2];
             T += "/build";
             T += " &&" + commands[0] + " && " + commands[1];
+            if (strstr(attributes[2].c_str(),"-g ") != NULL)
+            {
+                 T += "&& dsymutil ";
+                 T += attributes[7];
+            }
             T += " && rm -f ";
             T += working_dir;
             T += "/";
@@ -500,28 +480,10 @@ int main(int argc, char* argv[])
         }
         else if (String(argv[1]) == "do")
         {
-            std::cout << commands[0] + "\n" + commands[1] << std::endl;
-            String T = "cd ";
-            T += working_dir;
-            T += "/";
-            T += argv[2];
-            T += "/build";
-            T += " &&" + commands[0] + " && " + commands[1];
-            T += " && rm -f ";
-            T += working_dir;
-            T += "/";
-            T += argv[2];
-            T += "/build/*.o";
-            system(T.c_str());
-            T = "cd ";
-            T += working_dir;
-            T += "/";
-            T += argv[2];
-            T += "/build";
-            if (use_lldb(attributes))
-                T += "&& " + commands[4];
-            else
-                T += "&& " + commands[5];
+            String T = "Horst build ";
+            T += String(argv[2]);
+            T += " && Horst run ";
+            T += String(argv[2]);
             system(T.c_str());
         }
         else
