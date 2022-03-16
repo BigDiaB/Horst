@@ -21,7 +21,7 @@ void replace(String& input, String pattern, String replacement)
 
 #define VERSION_MAJOR 11
 #define VERSION_MINOR 0
-#define VERSION_PATCH 0
+#define VERSION_PATCH 2
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -480,10 +480,30 @@ int main(int argc, char* argv[])
         }
         else if (String(argv[1]) == "do")
         {
-            String T = "Horst build ";
-            T += String(argv[2]);
-            T += " && Horst run ";
-            T += String(argv[2]);
+            copy_dependencies(attributes,argv[2]);
+            std::cout << commands[0] + "\n" + commands[1] << std::endl;
+            String T = "cd ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build";
+            T += " &&" + commands[0] + " && " + commands[1];
+            if (strstr(attributes[2].c_str(),"-g ") != NULL)
+            {
+                 T += "&& dsymutil ";
+                 T += attributes[7];
+            }
+            T += " && rm -f ";
+            T += working_dir;
+            T += "/";
+            T += argv[2];
+            T += "/build/*.o";
+
+            if (use_lldb(attributes))
+                T += " && " + commands[4];
+            else
+                T += " && " + commands[5];
+
             system(T.c_str());
         }
         else
