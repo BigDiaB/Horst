@@ -17,7 +17,7 @@ void replace(String& input, String pattern, String replacement)
     input = std::regex_replace(input,pat, replacement.c_str());
 }
 
-#define NUM_ATTRIBUTES 11
+#define NUM_ATTRIBUTES 12
 
 #define VERSION_MAJOR 11
 #define VERSION_MINOR 0
@@ -26,11 +26,11 @@ void replace(String& input, String pattern, String replacement)
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
 String vars[] = {
-    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME", "DEBUGGER", "DEPENDENCIES", "DEPENDENCY_TYPE"
+    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME", "DEBUGGER", "DEPENDENCIES", "DEPENDENCY_TYPE", "DEFINES"
 };
 
 String attr_template[] = {
-    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "debugger: ", "dependencies: ", "d_type: "
+    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "debugger: ", "dependencies: ", "d_type: ", "defines: "
 };
 
 void file_to_string(String filename, String& doc)
@@ -351,7 +351,7 @@ int main(int argc, char* argv[])
 
     
     working_dir();
-    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES");
+    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES");
     commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
     commands.push_back("COMPILER_NAME -c COMPILER_FLAGS -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a EXECUTABLE_NAME.o"); //static library
     commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
