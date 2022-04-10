@@ -284,6 +284,8 @@ void copy_dependencies(Vector<String> attributes, char* target)
             T += dependencies[i];
             T += " && ";
             T += "cp ";
+			T += exe_path;
+			T += "/";
             T += dependencies[i];
             T += "/build/lib";
             T += dependencies[i];
@@ -300,6 +302,8 @@ void copy_dependencies(Vector<String> attributes, char* target)
             T += dependencies[i];
             T += " && ";
             T += "cp ";
+			T += exe_path;
+			T += "/";
             T += dependencies[i];
             T += "/build/lib";
             T += dependencies[i];
