@@ -9,8 +9,6 @@
 #define String std::string
 #define Vector std::vector
 
-#define working_dir() char working_dir[1024];getcwd(working_dir,1024)
-
 void replace(String& input, String pattern, String replacement)
 {
     std::regex pat(pattern);
@@ -20,8 +18,8 @@ void replace(String& input, String pattern, String replacement)
 #define NUM_ATTRIBUTES 12
 
 #define VERSION_MAJOR 11
-#define VERSION_MINOR 0
-#define VERSION_PATCH 2
+#define VERSION_MINOR 3
+#define VERSION_PATCH 5
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -33,13 +31,12 @@ String attr_template[] = {
     "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "debugger: ", "dependencies: ", "d_type: ", "defines: "
 };
 
+char exe_path[2056];
+
 void file_to_string(String filename, String& doc)
-{
-    char working_dir[1024];
-    getcwd(working_dir,1024);
-    
+{	
     std::ifstream file;
-    file.open(String(working_dir) + "/" + String(filename) + "/build/" + String(filename) + ".horstproj");
+    file.open(String(exe_path) + "/" + String(filename) + "/build/" + String(filename) + ".horstproj");
     if (!file.is_open() and !file)
     {
         std::cerr << "Konnte die Projekt-Datei nicht finden!" << std::endl;
@@ -321,44 +318,29 @@ void copy_dependencies(Vector<String> attributes, char* target)
 
 int main(int argc, char* argv[])
 {
+	strcpy(exe_path,"/Users/benjaminemde/DEV");
+	chdir(exe_path);
+	
     version();
     if (argc == 1 || String(argv[1]) == "help")
     {
         print_keywords();
         exit(0);
     }
-    
-    if (String(argv[1]) == "self")
+    else if (String(argv[1]) == "self")
     {
-        system("cd Horst/build && clang++ ../src/main.cpp -o Horst && cd ../../");
+		String T = "cd " + String(exe_path) + "/Horst/build && clang++ ../src/main.cpp -o Horst && cd ../../";
+        system(T.c_str());
         return 0;
     }
-
-    char path_save[256];
-    char *p;
-    char exe_path[2056];
-
-    if(!(p = strrchr(argv[0], '/')))
-        getcwd(exe_path, 2056);
-    else
-    {
-        *p = '\0';
-        getcwd(path_save, 2056);
-        chdir(argv[0]);
-        getcwd(exe_path, 2056);
-        chdir(path_save);
-    }
-
     
-    working_dir();
     commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES");
     commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
     commands.push_back("COMPILER_NAME -c COMPILER_FLAGS -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a EXECUTABLE_NAME.o"); //static library
     commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
-    commands.push_back("lldb -b -o run -f " + String(working_dir) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME"); //execute with lldb
+    commands.push_back("lldb -b -o run -f " + String(exe_path) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME"); //execute with lldb
     commands.push_back("./EXECUTABLE_NAME");    //execute without lldb
     Vector<String> attributes;
-    String attributes_make = " ";
 
 
     #ifndef DEBUG
@@ -385,18 +367,18 @@ int main(int argc, char* argv[])
             T += exe_path;
             T += "/Horst/";
             T += "prep ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             system(T.c_str());
 
             T = "mv ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             T += "/build/";
             T += "prep.horstproj ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             T += "/build/";
@@ -423,7 +405,7 @@ int main(int argc, char* argv[])
             copy_dependencies(attributes,argv[2]);
             std::cout << commands[3] << std::endl;
             String T = "cd ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             T += "/build";
@@ -435,7 +417,7 @@ int main(int argc, char* argv[])
             copy_dependencies(attributes,argv[2]);
             std::cout << commands[2] << std::endl;
             String T = "cd ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             T += "/build";
@@ -447,7 +429,7 @@ int main(int argc, char* argv[])
             copy_dependencies(attributes,argv[2]);
             std::cout << commands[0] + "\n" + commands[1] << std::endl;
             String T = "cd ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             T += "/build";
@@ -458,7 +440,7 @@ int main(int argc, char* argv[])
                  T += attributes[7];
             }
             T += " && rm -f ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             T += "/build/*.o";
@@ -467,7 +449,7 @@ int main(int argc, char* argv[])
         else if (String(argv[1]) == "run")
         {
             String T = "cd ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             T += "/build";
@@ -483,7 +465,7 @@ int main(int argc, char* argv[])
             copy_dependencies(attributes,argv[2]);
             std::cout << commands[0] + "\n" + commands[1] << std::endl;
             String T = "cd ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             T += "/build";
@@ -494,7 +476,7 @@ int main(int argc, char* argv[])
                  T += attributes[7];
             }
             T += " && rm -f ";
-            T += working_dir;
+            T += exe_path;
             T += "/";
             T += argv[2];
             T += "/build/*.o";
