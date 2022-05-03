@@ -17,9 +17,9 @@ void replace(String& input, String pattern, String replacement)
 
 #define NUM_ATTRIBUTES 12
 
-#define VERSION_MAJOR 11
-#define VERSION_MINOR 3
-#define VERSION_PATCH 5
+#define VERSION_MAJOR 12
+#define VERSION_MINOR 0
+#define VERSION_PATCH 1
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -28,7 +28,7 @@ String vars[] = {
 };
 
 String attr_template[] = {
-    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "debugger: ", "dependencies: ", "d_type: ", "defines: "
+    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "debugger: ", "dependencies: ", "d_types: ", "defines: "
 };
 
 char exe_path[2056];
@@ -37,7 +37,7 @@ void file_to_string(String filename, String& doc)
 {	
     std::ifstream file;
     file.open(String(exe_path) + "/" + String(filename) + "/build/" + String(filename) + ".horstproj");
-    if (!file.is_open() and !file)
+    if (!file.is_open() or !file)
     {
         std::cerr << "Konnte die Projekt-Datei nicht finden!" << std::endl;
         exit(EXIT_FAILURE);
@@ -218,7 +218,8 @@ void remove_from_proj_list(char* name)
 
 bool check_in_proj_list(String name)
 {
-    return true;
+	if (name.empty())
+		return false;
     std::ifstream file;
     String line,doc;
     file.open("Horst/build/proj_list.horstproj");
@@ -242,7 +243,7 @@ void copy_dependencies(Vector<String> attributes, char* target)
     Vector<String> types;
 
     std::stringstream ds(attributes[9]);
-    std::stringstream dt(attributes[9]);
+    std::stringstream dt(attributes[10]);
     
     while (ds.good()) {
         String substr;
@@ -255,12 +256,17 @@ void copy_dependencies(Vector<String> attributes, char* target)
         std::getline(dt, substr, ' ');
         types.push_back(substr);
     }
-
+	
+	
     for (int i = 1; i < (int)dependencies.size(); i++)
     {
+		
+		if (dependencies[i].empty())
+			continue;
+		
         if (!check_in_proj_list(dependencies[i]))
         {
-            std::cerr << "Konnte die Dependency in der Projekt-Liste nicht finden!: " << dependencies[i] << std::endl;
+            std::cerr << "Konnte die Dependency in der Projekt-Liste nicht finden!: " << "\"" << dependencies[i] << "\"" << std::endl;
             // exit(EXIT_FAILURE);
             continue;
         }
@@ -277,7 +283,7 @@ void copy_dependencies(Vector<String> attributes, char* target)
         T += "/libs/include/";
         T += dependencies[i];
         system(T.c_str());
-
+				
         if (types[i] == "dynamic")
         {
             String T = "cd && Horst dlib ";
@@ -290,10 +296,10 @@ void copy_dependencies(Vector<String> attributes, char* target)
             T += "/build/lib";
             T += dependencies[i];
             T += ".dylib ";
+			T += String(exe_path);
+			T += "/";
             T += String(target);
-            T += "/libs/lib/lib";
-            T += dependencies[i];
-            T += ".dylib";
+            T += "/libs/lib/";
             system(T.c_str());
         }
         else
@@ -308,10 +314,10 @@ void copy_dependencies(Vector<String> attributes, char* target)
             T += "/build/lib";
             T += dependencies[i];
             T += ".a ";
+			T += String(exe_path);
+			T += "/";
             T += String(target);
-            T += "/libs/lib/lib";
-            T += dependencies[i];
-            T += ".a";
+            T += "/libs/lib/";
             system(T.c_str());
         }
     }
