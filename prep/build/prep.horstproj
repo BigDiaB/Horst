@@ -9,3 +9,4 @@ libraries:
 debugger: none
 dependencies:
 d_types:
+defines:
