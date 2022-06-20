@@ -5,6 +5,8 @@
 #include <regex>
 #include <vector>
 #include <unistd.h>
+#include <dirent.h>
+#include <errno.h>
 
 #define String std::string
 #define Vector std::vector
@@ -17,9 +19,9 @@ void replace(String& input, String pattern, String replacement)
 
 #define NUM_ATTRIBUTES 12
 
-#define VERSION_MAJOR 12
+#define VERSION_MAJOR 13
 #define VERSION_MINOR 0
-#define VERSION_PATCH 1
+#define VERSION_PATCH 0
 
 #define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
@@ -186,6 +188,7 @@ void add_to_proj_list(char* name)
 
     file_o.close();
 
+    std::cout << "Projekt \"" << name << "\"" << " hinzugefügt!" << std::endl;
 }
 
 void remove_from_proj_list(char* name)
@@ -214,6 +217,8 @@ void remove_from_proj_list(char* name)
         file_o << lines[i];
 
     file_o.close();
+
+    std::cout << "Projekt \"" << name << "\"" << " entfernt!" << std::endl;
 }
 
 bool check_in_proj_list(String name)
@@ -227,7 +232,10 @@ bool check_in_proj_list(String name)
     {
         std::getline(file, line);
         if (strcmp(name.c_str(),line.c_str()) == 0)
+        {
+            std::cout << "Projekt \"" << name << "\"" << " gefunden!" << std::endl;
             return true;
+        }
     }
     return false;
 }
@@ -257,25 +265,41 @@ void copy_dependencies(Vector<String> attributes, char* target)
         types.push_back(substr);
     }
 	
-	
+	bool first = true;
     for (int i = 1; i < (int)dependencies.size(); i++)
     {
-		
 		if (dependencies[i].empty())
 			continue;
+
+        if (first)
+        {
+            std::cout << "Dependencies für \"" << target << "\" werden kopiert!" << std::endl;
+            first = false;
+        }
 		
         if (!check_in_proj_list(dependencies[i]))
         {
             std::cerr << "Konnte die Dependency in der Projekt-Liste nicht finden!: " << "\"" << dependencies[i] << "\"" << std::endl;
-            // exit(EXIT_FAILURE);
             continue;
         }
-
-        String T = "mkdir ";
-        T += String(target);
+        String T;
+        T = String(target);
         T += "/libs/include/";
         T += dependencies[i];
-        system(T.c_str());
+
+        DIR* dir = opendir(T.c_str());
+        if (dir) {
+            closedir(dir);
+        } else if (ENOENT == errno) {
+            closedir(dir);
+            T = "mkdir ";
+            T += String(target);
+            T += "/libs/include/";
+            T += dependencies[i];
+            system(T.c_str());
+        }
+
+        
         T = "cp ";
         T += dependencies[i];
         T += "/src/*.h ";
@@ -283,6 +307,9 @@ void copy_dependencies(Vector<String> attributes, char* target)
         T += "/libs/include/";
         T += dependencies[i];
         system(T.c_str());
+
+
+        std::cout << types[i] << " library " << "\"" << dependencies[i] << "\"" << " wird kompiliert und nach \"" << target << "\" kopiert!" << std::endl;
 				
         if (types[i] == "dynamic")
         {
@@ -322,6 +349,7 @@ void copy_dependencies(Vector<String> attributes, char* target)
         }
     }
 
+    std::cout << "Dependencies für \"" << target << "\" wurden kopiert!" << std::endl;
 }
 
 // #define DEBUG
@@ -346,7 +374,7 @@ int main(int argc, char* argv[])
     
     commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES");
     commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
-    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a EXECUTABLE_NAME.o"); //static library
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a EXECUTABLE_NAME.o"); //static library
     commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
     commands.push_back("lldb -b -o run -f " + String(exe_path) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME"); //execute with lldb
     commands.push_back("./EXECUTABLE_NAME");    //execute without lldb
@@ -444,7 +472,7 @@ int main(int argc, char* argv[])
             T += argv[2];
             T += "/build";
             T += " &&" + commands[0] + " && " + commands[1];
-            if (strstr(attributes[2].c_str(),"-g ") != NULL)
+            if (strstr(attributes[2].c_str(),"-g") != NULL)
             {
                  T += "&& dsymutil ";
                  T += attributes[7];
