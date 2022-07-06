@@ -1,6 +1,6 @@
 
 #define VERSION_MAJOR 14
-#define VERSION_MINOR 0
+#define VERSION_MINOR 1
 #define VERSION_PATCH 0
 
 #include "util.hpp"
@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 	
     version();
 
-    if (argc == 1 || String(argv[1]) == "help")
+    if (argc == 1 || (argc >= 2 && String(argv[1]) == "help"))
     {
         print_keywords();
         exit(EXIT_SUCCESS);

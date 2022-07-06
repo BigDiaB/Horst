@@ -47,6 +47,7 @@ void Horst_build(char* target)
 {
     copy_dependencies(attributes,target);
     std::cout << commands[0] + "\n" + commands[1] << std::endl;
+
     String T = "cd ";
     T += exe_path;
     T += "/";

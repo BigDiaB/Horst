@@ -271,6 +271,7 @@ void copy_dependencies(Vector<String> attributes, char* target)
             std::cerr << "Konnte die Dependency in der Projekt-Liste nicht finden!: " << "\"" << dependencies[i] << "\"" << std::endl;
             continue;
         }
+
         String T;
         T = String(target);
         T += "/libs/include/";
@@ -312,10 +313,9 @@ void copy_dependencies(Vector<String> attributes, char* target)
             T += "/build/lib";
             T += dependencies[i];
             T += ".dylib ";
-			T += String(exe_path);
-			T += "/";
-            T += String(target);
-            T += "/libs/lib/";
+			T += "/usr/local/lib/lib";
+            T += dependencies[i];
+            T += ".dylib";
             system(T.c_str());
         }
         else
