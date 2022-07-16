@@ -3,8 +3,8 @@ gxx: clang
 gxxflags:
 cxxflags: -W -Wall -Wextra
 source: ../src/main.c
-includes:
-lib_path:
+includes: -I../libs/include
+lib_path: -L../libs/lib
 libraries:
 debugger: none
 dependencies:

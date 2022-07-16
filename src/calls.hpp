@@ -138,6 +138,7 @@ Horst_call Horst_calls[] = {
 
 Horst_call get_call(String call)
 {
+    DEBUG_MSG("asked for " + call);
     if (call == "new")
     {
         return Horst_calls[HCI_new];

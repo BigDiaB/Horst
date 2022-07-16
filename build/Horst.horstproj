@@ -9,3 +9,4 @@ source: ../src/main.cpp
 debugger: none
 dependencies:
 d_type:
+defines:

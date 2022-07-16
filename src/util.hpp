@@ -15,6 +15,15 @@
 #define String std::string
 #define Vector std::vector
 
+void DEBUG_MSG(String msg)
+{
+    #ifdef EBUG
+    puts(msg.c_str());
+    #else
+    msg = "";
+    #endif
+}
+
 void replace(String& input, String pattern, String replacement)
 {
     std::regex pat(pattern);
@@ -277,18 +286,20 @@ void copy_dependencies(Vector<String> attributes, char* target)
         T += "/libs/include/";
         T += dependencies[i];
 
+        DEBUG_MSG("opening directory: " + T);
+
         DIR* dir = opendir(T.c_str());
         if (dir) {
+            DEBUG_MSG(T + " exists");
             closedir(dir);
         } else if (ENOENT == errno) {
-            closedir(dir);
+            DEBUG_MSG(T + " doesn't exist");
             T = "mkdir ";
             T += String(target);
             T += "/libs/include/";
             T += dependencies[i];
             system(T.c_str());
         }
-
         
         T = "cp ";
         T += dependencies[i];
