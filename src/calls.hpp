@@ -124,7 +124,7 @@ enum Horst_call_index {
     HCI_NUM_CALLS
 };
 
-Horst_call Horst_calls[] = {
+Horst_call Horst_calls[HCI_NUM_CALLS] = {
     Horst_new,
     Horst_delete,
 

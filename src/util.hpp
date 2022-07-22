@@ -126,7 +126,7 @@ void prepare_var(Vector<String> attributes, Vector<String>& commands, int argc, 
 {
     commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES");
     commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
-    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a EXECUTABLE_NAME.o"); //static library
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a *.o"); //static library
     commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
     commands.push_back("lldb -b -o run -f " + String(exe_path) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME"); //execute with lldb
     commands.push_back("./EXECUTABLE_NAME");    //execute without lldb
@@ -153,8 +153,7 @@ void prepare_var(Vector<String> attributes, Vector<String>& commands, int argc, 
             if (first && argc > 2 && (String(argv[1]) == "build" || String(argv[1]) == "do"))
                 std::cout << vars[i] << ": " << attributes[i] << std::endl;
         }
-        first = false;
-        
+        first = false;   
     }
 }
 
@@ -312,7 +311,7 @@ void copy_dependencies(Vector<String> attributes, char* target)
 
         std::cout << types[i] << " library " << "\"" << dependencies[i] << "\"" << " wird kompiliert und nach \"" << target << "\" kopiert!" << std::endl;
 				
-        if (types[i] == "dynamic")
+        if (strstr(types[i].c_str(),"dynamic") != NULL)
         {
             String T = "cd && Horst dlib ";
             T += dependencies[i];
@@ -328,8 +327,10 @@ void copy_dependencies(Vector<String> attributes, char* target)
             T += dependencies[i];
             T += ".dylib";
             system(T.c_str());
+
+            puts(T.c_str());
         }
-        else
+        else if (strstr(types[i].c_str(),"static") != NULL)
         {
             String T = "cd && Horst slib ";
             T += dependencies[i];
@@ -346,7 +347,11 @@ void copy_dependencies(Vector<String> attributes, char* target)
             T += String(target);
             T += "/libs/lib/";
             system(T.c_str());
+
+            puts(T.c_str());
         }
+        else
+            printf("Weder \"static\" noch \"dynamic\" angegeben, ignoriere dependency: %s!\n",dependencies[i].c_str());
     }
 
     std::cout << "Dependencies für \"" << target << "\" wurden kopiert!" << std::endl;
