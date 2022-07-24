@@ -116,11 +116,14 @@ typedef void (*Horst_call)(char*);
 enum Horst_call_index {
     HCI_new = 0,
     HCI_delete,
+
     HCI_build,
     HCI_run,
     HCI_do,
+
     HCI_dlib,
     HCI_slib,
+
     HCI_NUM_CALLS
 };
 
