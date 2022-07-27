@@ -1,7 +1,7 @@
 
 #define VERSION_MAJOR 14
-#define VERSION_MINOR 3
-#define VERSION_PATCH 0
+#define VERSION_MINOR 4
+#define VERSION_PATCH 1
 
 #include "util.hpp"
 #include "calls.hpp"
@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
 
         if (String(argv[1]) != "delete")
         {
+            DEBUG_MSG("call is not \"delete\"");
             atrr_stuff(argv[2], attributes);
             prepare_var(attributes,commands, argc, argv);
         }

@@ -2,8 +2,8 @@ gxx: clang++
 gxxflags: 
 cxxflags: -g -W -Wall -Wextra -O0 -std=c++11
 out: Horst
-includes: -I../libs/include
-lib_path: -L../libs/lib
+includes:
+lib_path:
 libraries:
 source: ../src/main.cpp
 debugger: none

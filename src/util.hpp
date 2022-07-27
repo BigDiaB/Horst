@@ -87,7 +87,7 @@ void lines_to_attributes(Vector<String> lines,Vector<String>& attributes)
 {
     for (int i = 0; i < (int)lines.size(); i++)
     {
-        String t = (lines[i].substr(lines[i].find(": ") + 1));
+        String t = (lines[i].substr(lines[i].find(":") + 1));
         attributes.push_back(t);
     }
 }
