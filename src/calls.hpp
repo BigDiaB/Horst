@@ -2,6 +2,11 @@
 
 void Horst_new(char* target)
 {
+    if (check_in_proj_list(target))
+    {
+        std::cout << "\"" << target << "\" ist bereits in der Projektliste!" << std::endl;
+        return;
+    }
     add_to_proj_list(target);
 
     String T;
@@ -26,10 +31,6 @@ void Horst_new(char* target)
     T += "/build/";
     T += target;
     T += ".horstproj";
-    system(T.c_str());
-
-    T = "Horst build ";
-    T += target;
     system(T.c_str());
 }
 
