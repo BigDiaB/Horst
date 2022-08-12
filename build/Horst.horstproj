@@ -1,6 +1,6 @@
 gxx: clang++
 gxxflags: 
-cxxflags: -g -W -Wall -Wextra -O0 -std=c++11
+cxxflags:
 out: Horst
 includes:
 lib_path:

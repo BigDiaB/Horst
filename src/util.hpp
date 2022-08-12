@@ -4,6 +4,10 @@
 #include <string>
 #include <regex>
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -22,7 +26,7 @@ using namespace std;
 #ifdef _WIN32
     void copy_file(string src, string dest)
     {
-        string T = "xcopy /s";
+        string T = "xcopy /s ";
         T += string(src);
         T += " ";
         T += string(dest);
@@ -57,7 +61,7 @@ using namespace std;
 
     void delete_directory(string path)
     {
-        string T = "rmdir /s ";
+        string T = "rmdir /s /q ";
         T += path;
         system(T.c_str());
     }
