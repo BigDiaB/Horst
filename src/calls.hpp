@@ -2,12 +2,12 @@
 
 void Horst_new(char* target)
 {
-    if (check_in_proj_list(target))
+    if (proj_list(target,proj_check))
     {
         std::cout << "\"" << target << "\" ist bereits in der Projektliste!" << std::endl;
         return;
     }
-    add_to_proj_list(target);
+    proj_list(target,proj_add);
 
     String T;
     T = "cp -r ";
@@ -36,7 +36,7 @@ void Horst_new(char* target)
 
 void Horst_delete(char* target)
 {
-    remove_from_proj_list(target);
+    proj_list(target,proj_remove);
 
     String T;
     T = "rm -rf ";
@@ -47,14 +47,13 @@ void Horst_delete(char* target)
 void Horst_build(char* target)
 {
     copy_dependencies(attributes,target);
-    std::cout << commands[0] + "\n" + commands[1] << std::endl;
-
+    std::cout << commands[cmd_compile] + "\n" + commands[cmd_link] << std::endl;
     String T = "cd ";
     T += exe_path;
     T += "/";
     T += target;
     T += "/build";
-    T += " &&" + commands[0] + " && " + commands[1];
+    T += " &&" + commands[cmd_compile] + " && " + commands[cmd_link];
     if (strstr(attributes[2].c_str(),"-g") != NULL)
     {
          T += "&& dsymutil ";
@@ -74,11 +73,7 @@ void Horst_run(char* target)
     T += "/";
     T += target;
     T += "/build";
-    if (use_lldb(attributes))
-        T += "&& " + commands[4];
-    else
-        T += "&& " + commands[5];
-
+    T += "&& " + commands[cmd_execute];
     system(T.c_str());
 }
 void Horst_do(char* target)
@@ -90,25 +85,25 @@ void Horst_do(char* target)
 void Horst_dlib(char* target)
 {
     copy_dependencies(attributes,target);
-    std::cout << commands[3] << std::endl;
+    std::cout << commands[cmd_dynamic] << std::endl;
     String T = "cd ";
     T += exe_path;
     T += "/";
     T += target;
     T += "/build";
-    T += " &&" + commands[3];
+    T += " &&" + commands[cmd_dynamic];
     system(T.c_str());
 }
 void Horst_slib(char* target)
 {
     copy_dependencies(attributes,target);
-    std::cout << commands[2] << std::endl;
+    std::cout << commands[cmd_static] << std::endl;
     String T = "cd ";
     T += exe_path;
     T += "/";
     T += target;
     T += "/build";
-    T += " &&" + commands[2];
+    T += " &&" + commands[cmd_static];
     system(T.c_str());
 }
 

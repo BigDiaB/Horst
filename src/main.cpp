@@ -6,6 +6,7 @@
 #include "util.hpp"
 #include "calls.hpp"
 
+
 int main(int argc, char* argv[])
 {
 	strcpy(exe_path,"/Users/benjaminemde/DEV");
@@ -47,7 +48,7 @@ int main(int argc, char* argv[])
         }
 
         DEBUG_MSG("checking proj-list");
-        if (!check_in_proj_list(String(argv[2])))
+        if (!proj_list(String(argv[2]),proj_check))
         {
             std::cerr << "Projekt \"" << argv[2] << "\"" << " ist nicht in der Projekt-Liste!" << std::endl;
             exit(EXIT_FAILURE);
@@ -57,8 +58,7 @@ int main(int argc, char* argv[])
         if (String(argv[1]) != "delete")
         {
             DEBUG_MSG("call is not \"delete\"");
-            atrr_stuff(argv[2], attributes);
-            prepare_var(attributes,commands, argc, argv);
+            get_attributes(String(argv[2]));
         }
     }
 

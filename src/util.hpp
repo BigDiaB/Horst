@@ -6,14 +6,35 @@
 #include <sstream>
 #include <regex>
 #include <vector>
-#include <unistd.h>
-#include <dirent.h>
-#include <errno.h>
 
-#define NUM_ATTRIBUTES 12
+#include <sys/stat.h>
+#include <unistd.h>
 
 #define String std::string
 #define Vector std::vector
+#define PROJ_LIST_DIR "Horst/build/proj_list.horstproj"
+#define NUM_ATTRIBUTES 12
+#define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
+
+Vector<String> attributes;
+Vector<String> commands;
+char exe_path[2056];
+
+enum command_list
+{
+    cmd_compile,
+    cmd_link,
+    cmd_static,
+    cmd_dynamic,
+    cmd_execute
+};
+
+enum proj_method
+{
+    proj_add,
+    proj_remove,
+    proj_check
+};
 
 void DEBUG_MSG(String msg)
 {
@@ -30,216 +51,151 @@ void replace(String& input, String pattern, String replacement)
     input = std::regex_replace(input,pat, replacement.c_str());
 }
 
-Vector<String> attributes;
-Vector<String> commands;
+void get_attributes(String target)
+{
+    #ifdef _WIN32
+    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES"); //compile standard executable
+    commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME.exe *.o INCLUDES LIB_PATH LIBRARIES"); //link standard executable
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.lib *.o"); //static library
+    commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dll SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
+    commands.push_back("EXECUTABLE_NAME.exe");
+    #elif defined __linux__
+    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES"); //compile standard executable
+    commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES"); //link standard executable
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a *.o"); //static library
+    commands.push_back("COMPILER_NAME -shared -o libEXECUTABLE_NAME.so SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
+    commands.push_back("./EXECUTABLE_NAME");
+    #elif defined __APPLE__
+    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES"); //compile standard executable
+    commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES"); //link standard executable
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a *.o"); //static library
+    commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
+    commands.push_back("./EXECUTABLE_NAME");
+    #endif
 
-#define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
-
-String vars[] = {
-    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME", "DEBUGGER", "DEPENDENCIES", "DEPENDENCY_TYPE", "DEFINES"
-};
-
-String attr_template[] = {
+    String attr_template[NUM_ATTRIBUTES] = {
     "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "debugger: ", "dependencies: ", "d_types: ", "defines: "
-};
+    };
 
-char exe_path[2056];
+    String vars[NUM_ATTRIBUTES] = {
+    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME", "DEBUGGER", "DEPENDENCIES", "DEPENDENCY_TYPE", "DEFINES"
+    };
 
-void file_to_string(String filename, String& doc)
-{	
     std::ifstream file;
-    file.open(String(exe_path) + "/" + String(filename) + "/build/" + String(filename) + ".horstproj");
-    if (!file.is_open() or !file)
-    {
-        std::cerr << "Konnte die Projekt-Datei nicht finden!" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-    String line;
-    
+    file.open(String(exe_path) + "/" + target + "/build/" + target + ".horstproj");
     while (!file.eof() and file.is_open() and file)
     {
+        String line;
         std::getline(file, line);
-        doc += line + "\n";
-    }
-    
-}
 
-void string_to_vector(String doc, Vector<String>& vec)
-{
-    
-    std::stringstream ss(doc);
-    
-    while (ss.good()) {
-        bool relevant = false;
-        String substr;
-        std::getline(ss, substr, '\n');
         for (int i = 0; i < NUM_ATTRIBUTES; i++)
-        {
-            if (substr.find(attr_template[i]) != String::npos)
-                relevant = true;
-        }
-        if (relevant)
-            vec.push_back(substr);
+            if (line.find(attr_template[i]) != String::npos)
+                attributes.push_back(line);
     }
-}
 
-void lines_to_attributes(Vector<String> lines,Vector<String>& attributes)
-{
-    for (int i = 0; i < (int)lines.size(); i++)
+    String temp[NUM_ATTRIBUTES];
+    for (int j = 0; j < (int)NUM_ATTRIBUTES; j++)
     {
-        String t = (lines[i].substr(lines[i].find(":") + 1));
-        attributes.push_back(t);
-    }
-}
-
-void sort_attributes_in_lines(Vector<String>& lines)
-{
-    String new_lines[NUM_ATTRIBUTES];
-    for (int i = 0; i < NUM_ATTRIBUTES; i++)
-    {
-        for (int j = 0; j < NUM_ATTRIBUTES; j++)
+        for (int i = 0; i < (int)attributes.size(); i++)
         {
-            if (lines[i].find(attr_template[j]) != String::npos)
+            if (attributes[i].find(attr_template[j]) != String::npos)
             {
-                new_lines[j] = lines[i];
+                replace(attributes[i],attr_template[j],"");
+                temp[j] = attributes[i];
             }
         }
     }
-    lines.clear();
+    attributes.clear();
     for (int i = 0; i < NUM_ATTRIBUTES; i++)
+        attributes.push_back(temp[i]);
+    for (int i = 0; i < (int)commands.size(); i++)
     {
-        lines.push_back(new_lines[i]);
-    }
-}
-
-void atrr_stuff(String filename, Vector<String>& attributes)
-{
-    Vector<String> proj_data;
-    String doc;
-    file_to_string(filename, doc);
-    string_to_vector(doc,proj_data);
-    sort_attributes_in_lines(proj_data);
-    lines_to_attributes(proj_data, attributes);
-}
-
-void prepare_var(Vector<String> attributes, Vector<String>& commands, int argc, char* argv[])
-{
-    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES");
-    commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES");
-    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a *.o"); //static library
-    commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
-    commands.push_back("lldb -b -o run -f " + String(exe_path) + "/" + String(argv[2]) + "/build/" + "EXECUTABLE_NAME"); //execute with lldb
-    commands.push_back("./EXECUTABLE_NAME");    //execute without lldb
-
-    Vector<String> temp;
-    for (int i = 0; i < (int)attributes.size(); i++)
-    {
-        temp.push_back(attributes[i]);
-    }
-    for (int i = 0; i < (int)temp.size(); i++)
-    {
-        replace(temp[i],attr_template[i],"");
-    }
-    
-    bool first = true;
-    
-    for (int j = 0; j < (int)commands.size(); j++)
-    {
-        for (int i = 0; i < NUM_ATTRIBUTES; i++)
+        for (int j = 0; j < NUM_ATTRIBUTES; j++)
         {
-            if (vars[i] == "EXECUTABLE_NAME")
-                replace(temp[i]," ","");
-            replace(commands[j], vars[i],temp[i]);
-            if (first && argc > 2 && (String(argv[1]) == "build" || String(argv[1]) == "do"))
-                std::cout << vars[i] << ": " << attributes[i] << std::endl;
-        }
-        first = false;   
-    }
-}
-
-
-void add_to_proj_list(char* name)
-{
-    std::ifstream file;
-    file.open("Horst/build/proj_list.horstproj");
-
-    String line,doc;
-    Vector<String> lines;
-    
-    while (!file.eof() and file.is_open() and file)
-    {
-        std::getline(file, line);
-        lines.push_back(line + "\n");
-    }
-
-    file.close();
-
-    lines.push_back(String(name));
-
-
-    std::ofstream file_o;
-    file_o.open("Horst/build/proj_list.horstproj");
-
-    for (int i = 0; i < (int)lines.size(); i++)
-        file_o << lines[i];   
-
-    file_o.close();
-
-    std::cout << "Projekt \"" << name << "\"" << " hinzugefügt!" << std::endl;
-}
-
-void remove_from_proj_list(char* name)
-{
-    std::ifstream file;
-    file.open("Horst/build/proj_list.horstproj");
-
-    String line,doc;
-    Vector<String> lines;
-    
-    while (!file.eof() and file.is_open() and file)
-    {
-        std::getline(file, line);
-        if (!(0 == strcmp(name,line.c_str())))
-            lines.push_back(line + "\n");
-    }
-
-    file.close();
-
-    replace(lines[lines.size() - 1],"\n","");
-
-    std::ofstream file_o;
-    file_o.open("Horst/build/proj_list.horstproj");
-
-    for (int i = 0; i < (int)lines.size(); i++)
-        file_o << lines[i];
-
-    file_o.close();
-
-    std::cout << "Projekt \"" << name << "\"" << " entfernt!" << std::endl;
-}
-
-bool check_in_proj_list(String name)
-{
-	if (name.empty())
-		return false;
-    std::ifstream file;
-    String line,doc;
-    file.open("Horst/build/proj_list.horstproj");
-    while (!file.eof() and file.is_open() and file)
-    {
-        std::getline(file, line);
-        if (strcmp(name.c_str(),line.c_str()) == 0)
-        {
-            std::cout << "Projekt \"" << name << "\"" << " gefunden!" << std::endl;
-            return true;
+            if (commands[i].find(vars[j]) != String::npos)
+            {
+                replace(commands[i],vars[j],attributes[j]);
+            }
         }
     }
-    return false;
 }
 
-bool use_lldb(Vector<String> attr)
+bool proj_list(String target, enum proj_method method)
 {
-    return (strstr(attr[8].c_str(),"lldb") != NULL);
+    switch(method)
+    {
+        case proj_add:
+        {
+            std::ifstream file;
+            file.open(PROJ_LIST_DIR);
+            Vector<String> lines;
+            while (!file.eof() and file.is_open() and file)
+            {
+                String line;
+                std::getline(file, line);
+                lines.push_back(line + "\n");
+            }
+            file.close();
+            lines.push_back(String(target));
+
+            std::ofstream file_o;
+            file_o.open(PROJ_LIST_DIR);
+
+            for (int i = 0; i < (int)lines.size(); i++)
+                file_o << lines[i];   
+
+            file_o.close();
+        }
+        break;
+
+        case proj_remove:
+        {
+                std::ifstream file;
+                file.open(PROJ_LIST_DIR);
+
+                Vector<String> lines;
+                
+                while (!file.eof() and file.is_open() and file)
+                {
+                    String line;
+                    std::getline(file, line);
+                    if (target != line)
+                        lines.push_back(line + "\n");
+                }
+
+                file.close();
+
+                replace(lines[lines.size() - 1],"\n","");
+
+                std::ofstream file_o;
+                file_o.open(PROJ_LIST_DIR);
+
+                for (int i = 0; i < (int)lines.size(); i++)
+                    file_o << lines[i];
+
+                file_o.close();
+        }
+        break;
+
+        case proj_check:
+        {
+            if (target.empty())
+                return false;
+            std::ifstream file;
+            String line;
+            file.open(PROJ_LIST_DIR);
+            while (!file.eof() and file.is_open() and file)
+            {
+                std::getline(file, line);
+                if (target == line)
+                    return true;
+            }
+            return false;
+        }
+        break;
+    }
+
+    return true;
 }
 
 void copy_dependencies(Vector<String> attributes, char* target)
@@ -274,7 +230,7 @@ void copy_dependencies(Vector<String> attributes, char* target)
             first = false;
         }
 		
-        if (!check_in_proj_list(dependencies[i]))
+        if (!proj_list(dependencies[i],proj_check))
         {
             std::cerr << "Konnte die Dependency in der Projekt-Liste nicht finden!: " << "\"" << dependencies[i] << "\"" << std::endl;
             continue;
@@ -287,11 +243,22 @@ void copy_dependencies(Vector<String> attributes, char* target)
 
         DEBUG_MSG("opening directory: " + T);
 
-        DIR* dir = opendir(T.c_str());
-        if (dir) {
+        
+        struct stat info;
+
+        if(stat( T.c_str(), &info ) != 0)
+        {
+            DEBUG_MSG(T + " doesn't exist");
+            T = "mkdir ";
+            T += String(target);
+            T += "/libs/include/";
+            T += dependencies[i];
+            system(T.c_str());
+        }
+        else if(info.st_mode & S_IFDIR)
             DEBUG_MSG(T + " exists");
-            closedir(dir);
-        } else if (ENOENT == errno) {
+        else
+        {
             DEBUG_MSG(T + " doesn't exist");
             T = "mkdir ";
             T += String(target);
