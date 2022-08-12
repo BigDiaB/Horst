@@ -1,175 +1,113 @@
 #pragma once
 
-void Horst_new(char* target)
+#ifdef _WIN32
+string home_dir = "C:\\Users\\Benjamin Emde\\DEV";
+#else
+string home_dir = "Users/Benjaminemde/DEV";
+#endif
+
+vector<string> attributes;
+vector<string> commands;
+
+enum arg_indices
 {
-    if (check_in_proj_list(target))
-    {
-        std::cout << "\"" << target << "\" ist bereits in der Projektliste!" << std::endl;
+    arg_call,
+    arg_method,
+    arg_target
+};
+
+typedef void (*Horst_call)(string);
+
+enum proj_method
+{
+    proj_add,
+    proj_remove,
+    proj_check
+};
+
+bool proj_list(string target, enum proj_method method)
+{
+    return false;
+}
+
+void get_attributes(string target, vector<string>& attributes)
+{
+
+}
+
+void Horst_new(string target)
+{
+    if (proj_list(target, proj_check))
         return;
-    }
-    add_to_proj_list(target);
-
-    String T;
-    T = "cp -r ";
-    T += exe_path;
-    T += "/Horst/";
-    T += "prep ";
-    T += exe_path;
-    T += "/";
-    T += target;
-    system(T.c_str());
-
-    T = "mv ";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build/";
-    T += "prep.horstproj ";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build/";
-    T += target;
-    T += ".horstproj";
-    system(T.c_str());
+    proj_list(target,proj_add);
+    create_directory(string("\"" + home_dir + "\"\\\"" + target + "\""));
+    copy_file(string("prep "), string("\"" + home_dir + "\"\\\"" + target + "\""));
+    rename_file(string("\"" + home_dir + "\\" + target + "\\build\\prep.horstproj\""), string("\"" + target + ".horstproj\""));
 }
 
-void Horst_delete(char* target)
+void Horst_delete(string target)
 {
-    remove_from_proj_list(target);
+    if (!proj_list(target, proj_check))
+        return;
+    proj_list(target,proj_remove);
+    delete_directory(string("\"" + home_dir + "\"\\\"" + target + "\""));
 
-    String T;
-    T = "rm -rf ";
-    T += target;
-    system(T.c_str());
 }
 
-void Horst_build(char* target)
+void Horst_dlib(string target)
 {
-    copy_dependencies(attributes,target);
-    std::cout << commands[0] + "\n" + commands[1] << std::endl;
 
-    String T = "cd ";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build";
-    T += " &&" + commands[0] + " && " + commands[1];
-    if (strstr(attributes[2].c_str(),"-g") != NULL)
-    {
-         T += "&& dsymutil ";
-         T += attributes[7];
-    }
-    T += " && rm -f ";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build/*.o";
-    system(T.c_str());
-}
-void Horst_run(char* target)
-{
-    String T = "cd ";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build";
-    if (use_lldb(attributes))
-        T += "&& " + commands[4];
-    else
-        T += "&& " + commands[5];
-
-    system(T.c_str());
-}
-void Horst_do(char* target)
-{
-    Horst_build(target);
-    Horst_run(target);
 }
 
-void Horst_dlib(char* target)
+void Horst_slib(string target)
 {
-    copy_dependencies(attributes,target);
-    std::cout << commands[3] << std::endl;
-    String T = "cd ";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build";
-    T += " &&" + commands[3];
-    system(T.c_str());
-}
-void Horst_slib(char* target)
-{
-    copy_dependencies(attributes,target);
-    std::cout << commands[2] << std::endl;
-    String T = "cd ";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build";
-    T += " &&" + commands[2];
-    system(T.c_str());
+
 }
 
-typedef void (*Horst_call)(char*);
-
-enum Horst_call_index {
-    HCI_new = 0,
-    HCI_delete,
-
-    HCI_build,
-    HCI_run,
-    HCI_do,
-
-    HCI_dlib,
-    HCI_slib,
-
-    HCI_NUM_CALLS
-};
-
-Horst_call Horst_calls[HCI_NUM_CALLS] = {
-    Horst_new,
-    Horst_delete,
-
-    Horst_build,
-    Horst_run,
-    Horst_do,
-
-    Horst_dlib,
-    Horst_slib
-};
-
-Horst_call get_call(String call)
+void Horst_build(string target)
 {
-    DEBUG_MSG("asked for " + call);
-    if (call == "new")
+
+}
+
+void Horst_run(string target)
+{
+
+}
+
+void Horst_do(string target)
+{
+
+}
+
+Horst_call get_call(string method)
+{
+    if (method == "new")
     {
-        return Horst_calls[HCI_new];
+        return Horst_new;
     }
-    else if (call == "delete")
+    else if (method == "delete")
     {
-        return Horst_calls[HCI_delete];
+        return Horst_delete;
     }
-    else if (call == "dlib")
+    else if (method == "dlib")
     {
-        return Horst_calls[HCI_dlib];
+        return Horst_dlib;
     }
-    else if (call == "slib")
+    else if (method == "slib")
     {
-        return Horst_calls[HCI_slib];
+        return Horst_slib;
     }
-    else if (call == "build")
+    else if (method == "build")
     {
-        return Horst_calls[HCI_build];
+        return Horst_build;
     }
-    else if (call == "run")
+    else if (method == "run")
     {
-        return Horst_calls[HCI_run];
+        return Horst_run;
     }
-    else if (call == "do")
+    else if (method == "do")
     {
-        return Horst_calls[HCI_do];
+        return Horst_do;
     }
 
     return NULL;
