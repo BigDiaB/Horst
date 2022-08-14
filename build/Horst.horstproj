@@ -1,6 +1,10 @@
 gxx: clang++
 gxxflags: 
+<<<<<<< Updated upstream
 cxxflags:
+=======
+cxxflags: -g -W -Wall -Wextra -O0 -std=c++17
+>>>>>>> Stashed changes
 out: Horst
 includes:
 lib_path:

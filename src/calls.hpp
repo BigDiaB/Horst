@@ -58,6 +58,7 @@ bool proj_list(string target, enum proj_method method)
             file.close();
             lines.push_back(string(target));
 
+<<<<<<< Updated upstream
             std::ofstream file_o;
             file_o.open(PROJ_LIST_DIR);
 
@@ -116,6 +117,32 @@ bool proj_list(string target, enum proj_method method)
     }
 
     return true;
+=======
+    String T;
+    T = "cp -r \"";
+    T += exe_path;
+    T += "/Horst/";
+    T += "prep\" \"";
+    T += exe_path;
+    T += "/";
+    T += target;
+    T += "\"";
+    system(T.c_str());
+
+    T = "mv \"";
+    T += exe_path;
+    T += "/";
+    T += target;
+    T += "/build/";
+    T += "prep.horstproj\" \"";
+    T += exe_path;
+    T += "/";
+    T += target;
+    T += "/build/";
+    T += target;
+    T += ".horstproj\"";
+    system(T.c_str());
+>>>>>>> Stashed changes
 }
 
 void copy_dependencies(string target)
@@ -188,6 +215,7 @@ void copy_dependencies(string target)
 
 void get_attributes(string target)
 {
+<<<<<<< Updated upstream
     #ifdef _WIN32
     commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES"); //compile standard executable
     commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME.exe *.o INCLUDES LIB_PATH LIBRARIES"); //link standard executable
@@ -282,15 +310,46 @@ void Horst_dlib(string target)
     T += target;
     T += "\\build && ";
     T += commands[cmd_dynamic];
+=======
+    copy_dependencies(attributes,target);
+    std::cout << commands[cmd_compile] + "\n" + commands[cmd_link] << std::endl;
+    String T = "cd \"";
+    T += exe_path;
+    T += "/";
+    T += target;
+    T += "/build\"";
+    T += " &&" + commands[cmd_compile] + " && " + commands[cmd_link];
+    #ifndef _WIN32
+    if (strstr(attributes[2].c_str(),"-g") != NULL)
+    {
+         T += " && dsymutil ";
+         T += attributes[7];
+    }
+    #endif
+    T += " && rm -f \"";
+    T += exe_path;
+    T += "/";
+    T += target;
+    T += "/build/*.o\"";
+>>>>>>> Stashed changes
     system(T.c_str());
 }
 
 void Horst_slib(string target)
 {
+<<<<<<< Updated upstream
     string T = "cd ";
     T += target;
     T += "\\build && ";
     T += commands[cmd_static];
+=======
+    String T = "cd \"";
+    T += exe_path;
+    T += "/";
+    T += target;
+    T += "/build\"";
+    T += "&& " + commands[cmd_execute];
+>>>>>>> Stashed changes
     system(T.c_str());
 }
 
@@ -306,19 +365,41 @@ void Horst_build(string target)
 
 void Horst_run(string target)
 {
+<<<<<<< Updated upstream
     string T = "cd ";
     T += target;
     T += "\\build && ";
     T += commands[cmd_execute];
+=======
+    copy_dependencies(attributes,target);
+    std::cout << commands[cmd_dynamic] << std::endl;
+    String T = "cd \"";
+    T += exe_path;
+    T += "/";
+    T += target;
+    T += "/build\"";
+    T += " &&" + commands[cmd_dynamic];
+>>>>>>> Stashed changes
     system(T.c_str());
 }
 
 void Horst_do(string target)
 {
+<<<<<<< Updated upstream
     string T = "Horst build ";
     T += target;
     T += " && Horst run ";
     T += target;
+=======
+    copy_dependencies(attributes,target);
+    std::cout << commands[cmd_static] << std::endl;
+    String T = "cd \"";
+    T += exe_path;
+    T += "/";
+    T += target;
+    T += "/build\"";
+    T += " &&" + commands[cmd_static];
+>>>>>>> Stashed changes
     system(T.c_str());
 }
 

@@ -1,4 +1,5 @@
 
+<<<<<<< Updated upstream
 #ifdef _WIN32
 #define VERSION_OS      "OS_WIN"
 #elif defined __LINUX__
@@ -10,16 +11,34 @@
 #define VERSION_MAJOR   14
 #define VERSION_MINOR   0
 #define VERSION_PATCH   0
+=======
+#define VERSION_MAJOR 15
+#define VERSION_MINOR 0
+#define VERSION_PATCH 0
+>>>>>>> Stashed changes
 
 #include "util.hpp"
 #include "calls.hpp"
 
+<<<<<<< Updated upstream
 int main(int argc, char* argv_char[])
 {
     string argv[argc];
 
     for (int i = 0; i < argc; i++)
         argv[i] = argv_char[i];
+=======
+int main(int argc, char* argv[])
+{
+    #ifdef _WIN32
+        strcpy_s(exe_path,"C:/Users/benjamin Emde/DEV");
+    #else
+        strcpy_s(exe_path,"/Users/benjaminemde/DEV");
+    #endif
+	chdir(exe_path);
+	
+    version();
+>>>>>>> Stashed changes
 
     if (argc < 3 && false)
     {
@@ -49,5 +68,21 @@ int main(int argc, char* argv_char[])
         move_file(home_dir + "\\Horst\\build\\Horst.exe", home_dir + "\\Horst\\Horst.exe");
     #endif
 
+<<<<<<< Updated upstream
+=======
+    DEBUG_MSG("calling call");
+    requested_call(argv[2]);
+    DEBUG_MSG("called call");
+
+    #ifdef _WIN32
+        String T = "mv \"";
+        T += String(exe_path);
+        T += "/Horst/build/Horst.exe\" \"";
+        T += String(exe_path);
+        T += "/Horst\" ";
+        system(T.c_str());
+    #endif
+
+>>>>>>> Stashed changes
     return EXIT_SUCCESS;
 }

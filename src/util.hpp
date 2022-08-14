@@ -8,6 +8,36 @@
 #include <sstream>
 #include <sys/types.h>
 #include <sys/stat.h>
+<<<<<<< Updated upstream
+=======
+
+#ifdef _WIN32
+    #include <windows.h>
+    #include <direct.h>
+    #define chdir _chdir
+#else
+    #include <unistd.h>
+#endif
+
+#define String std::string
+#define Vector std::vector
+#define PROJ_LIST_DIR "Horst/build/proj_list.horstproj"
+#define NUM_ATTRIBUTES 12
+#define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
+
+Vector<String> attributes;
+Vector<String> commands;
+char exe_path[2056];
+
+enum command_list
+{
+    cmd_compile,
+    cmd_link,
+    cmd_static,
+    cmd_dynamic,
+    cmd_execute
+};
+>>>>>>> Stashed changes
 
 using namespace std;
 
@@ -23,6 +53,7 @@ using namespace std;
     #include <unistd.h>
 #endif
 
+<<<<<<< Updated upstream
 #ifdef _WIN32
     void copy_file(string src, string dest)
     {
@@ -32,6 +63,27 @@ using namespace std;
         T += string(dest);
         system(T.c_str());
     }
+=======
+void get_attributes(String target)
+{
+    #ifdef _WIN32
+    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES"); //compile standard executable
+    commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME.exe *.o INCLUDES LIB_PATH LIBRARIES"); //link standard executable
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.lib *.o"); //static library
+    commands.push_back("COMPILER_NAME -shared -o libEXECUTABLE_NAME.dll SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
+    commands.push_back("EXECUTABLE_NAME.exe");
+    #elif defined __APPLE__
+    commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES"); //compile standard executable
+    commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES"); //link standard executable
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a *.o"); //static library
+    commands.push_back("COMPILER_NAME -dynamiclib -o libEXECUTABLE_NAME.dylib SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
+    commands.push_back("./EXECUTABLE_NAME");
+    #endif
+
+    String attr_template[NUM_ATTRIBUTES] = {
+    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "debugger: ", "dependencies: ", "d_types: ", "defines: "
+    };
+>>>>>>> Stashed changes
 
     void move_file(string src, string dest)
     {
@@ -101,11 +153,101 @@ using namespace std;
         system(T.c_str());
     }
 
+<<<<<<< Updated upstream
     void delete_directory(string path)
     {
         string T = "rm -rf ";
         T += path;
         system(T.c_str());
+=======
+
+        std::cout << types[i] << " library " << "\"" << dependencies[i] << "\"" << " wird kompiliert und nach \"" << target << "\" kopiert!" << std::endl;
+		
+        #ifdef _WIN32
+        if (strstr(types[i].c_str(),"dynamic") != NULL)
+        {
+            String T = "cd && Horst dlib ";
+            T += dependencies[i];
+            T += " && ";
+            T += "cp \"";
+            T += exe_path;
+            T += "/";
+            T += dependencies[i];
+            T += "/build/lib";
+            T += dependencies[i];
+            T += ".dll\" \"";
+            T += String(exe_path);
+            T += "../SHARED_LIBS/lib";
+            T += dependencies[i];
+            T += ".dll\"";
+            system(T.c_str());
+
+            puts(T.c_str());
+        }
+        else if (strstr(types[i].c_str(),"static") != NULL)
+        {
+            String T = "cd && Horst slib ";
+            T += dependencies[i];
+            T += " && ";
+            T += "cp \"";
+            T += exe_path;
+            T += "/";
+            T += dependencies[i];
+            T += "/build/lib";
+            T += dependencies[i];
+            T += ".lib\" \"";
+            T += String(exe_path);
+            T += "/";
+            T += String(target);
+            T += "/libs/lib/\"";
+            system(T.c_str());
+
+            puts(T.c_str());
+        }
+        #else
+        if (strstr(types[i].c_str(),"dynamic") != NULL)
+        {
+            String T = "cd && Horst dlib ";
+            T += dependencies[i];
+            T += " && ";
+            T += "cp \"";
+            T += exe_path;
+            T += "/";
+            T += dependencies[i];
+            T += "/build/lib";
+            T += dependencies[i];
+            T += ".dylib\" ";
+            T += "/usr/local/lib/lib";
+            T += dependencies[i];
+            T += ".dylib";
+            system(T.c_str());
+
+            puts(T.c_str());
+        }
+        else if (strstr(types[i].c_str(),"static") != NULL)
+        {
+            String T = "cd && Horst slib ";
+            T += dependencies[i];
+            T += " && ";
+            T += "cp \"";
+            T += exe_path;
+            T += "/";
+            T += dependencies[i];
+            T += "/build/lib";
+            T += dependencies[i];
+            T += ".a\" \"";
+            T += String(exe_path);
+            T += "/";
+            T += String(target);
+            T += "/libs/lib/\"";
+            system(T.c_str());
+
+            puts(T.c_str());
+        }
+        #endif
+        else
+            printf("Weder \"static\" noch \"dynamic\" angegeben, ignoriere dependency: %s!\n",dependencies[i].c_str());
+>>>>>>> Stashed changes
     }
 #endif
 
