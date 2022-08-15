@@ -47,7 +47,6 @@ void Horst_delete(char* target)
 
 void Horst_build(char* target)
 {
-    copy_dependencies(attributes,target);
     std::cout << commands[cmd_compile] + "\n" + commands[cmd_link] << std::endl;
     String T = "cd \"";
     T += exe_path;
@@ -55,13 +54,6 @@ void Horst_build(char* target)
     T += target;
     T += "/build\"";
     T += " &&" + commands[cmd_compile] + " && " + commands[cmd_link];
-    #ifndef _WIN32
-    if (strstr(attributes[2].c_str(),"-g") != NULL)
-    {
-         T += " && dsymutil ";
-         T += attributes[7];
-    }
-    #endif
     T += " && rm -f \"";
     T += exe_path;
     T += "/";
@@ -85,31 +77,6 @@ void Horst_do(char* target)
     Horst_run(target);
 }
 
-void Horst_dlib(char* target)
-{
-    copy_dependencies(attributes,target);
-    std::cout << commands[cmd_dynamic] << std::endl;
-    String T = "cd \"";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build\"";
-    T += " &&" + commands[cmd_dynamic];
-    system(T.c_str());
-}
-void Horst_slib(char* target)
-{
-    copy_dependencies(attributes,target);
-    std::cout << commands[cmd_static] << std::endl;
-    String T = "cd \"";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build\"";
-    T += " &&" + commands[cmd_static];
-    system(T.c_str());
-}
-
 typedef void (*Horst_call)(char*);
 
 enum Horst_call_index {
@@ -119,9 +86,6 @@ enum Horst_call_index {
     HCI_build,
     HCI_run,
     HCI_do,
-
-    HCI_dlib,
-    HCI_slib,
 
     HCI_NUM_CALLS
 };
@@ -133,9 +97,6 @@ Horst_call Horst_calls[HCI_NUM_CALLS] = {
     Horst_build,
     Horst_run,
     Horst_do,
-
-    Horst_dlib,
-    Horst_slib
 };
 
 Horst_call get_call(String call)
@@ -148,14 +109,6 @@ Horst_call get_call(String call)
     else if (call == "delete")
     {
         return Horst_calls[HCI_delete];
-    }
-    else if (call == "dlib")
-    {
-        return Horst_calls[HCI_dlib];
-    }
-    else if (call == "slib")
-    {
-        return Horst_calls[HCI_slib];
     }
     else if (call == "build")
     {

@@ -8,18 +8,13 @@
 
 int main(int argc, char* argv[])
 {
-    #ifdef _WIN32
-        strcpy_s(exe_path,"C:/Users/benjamin Emde/DEV");
-    #else
-        strcpy_s(exe_path,"/Users/benjaminemde/DEV");
-    #endif
+    strcpy_s(exe_path,"C:/Users/benjamin Emde/DEV");
 	chdir(exe_path);
 	
     version();
 
     if (argc == 1 || (argc >= 2 && String(argv[1]) == "help"))
     {
-        print_keywords();
         exit(EXIT_SUCCESS);
     }
 
@@ -36,7 +31,6 @@ int main(int argc, char* argv[])
             system(T.c_str());
             exit(EXIT_SUCCESS);
         }
-        print_keywords(); 
         std::cout << "\"" << argv[1] << "\" ist kein gültiger Befehl!" << std::endl;
         exit(EXIT_SUCCESS);
     }
@@ -45,7 +39,6 @@ int main(int argc, char* argv[])
         DEBUG_MSG("call is not NULL or \"new\"");
         if (argc == 2)
         {
-            print_keywords();
             std::cout << "\"" << argv[1] << "\" benötigt weitere Argumente!" << std::endl;
             exit(EXIT_SUCCESS);
         }
@@ -69,14 +62,12 @@ int main(int argc, char* argv[])
     requested_call(argv[2]);
     DEBUG_MSG("called call");
 
-    #ifdef _WIN32
-        String T = "mv \"";
-        T += String(exe_path);
-        T += "/Horst/build/Horst.exe\" \"";
-        T += String(exe_path);
-        T += "/Horst\" ";
-        system(T.c_str());
-    #endif
+    String T = "mv \"";
+    T += String(exe_path);
+    T += "/Horst/build/Horst.exe\" \"";
+    T += String(exe_path);
+    T += "/Horst\" ";
+    system(T.c_str());
 
     return EXIT_SUCCESS;
 }
