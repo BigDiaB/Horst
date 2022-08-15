@@ -1,5 +1,5 @@
 
-#define VERSION_MAJOR 14
+#define VERSION_MAJOR "OS:WIN: 15"
 #define VERSION_MINOR 4
 #define VERSION_PATCH 1
 
