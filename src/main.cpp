@@ -62,12 +62,15 @@ int main(int argc, char* argv[])
     requested_call(argv[2]);
     DEBUG_MSG("called call");
 
-    String T = "mv \"";
-    T += String(exe_path);
-    T += "/Horst/build/Horst.exe\" \"";
-    T += String(exe_path);
-    T += "/Horst\" ";
-    system(T.c_str());
+    if (String(argv[2]) == "Horst")
+    {
+        String T = "mv \"";
+        T += String(exe_path);
+        T += "/Horst/build/Horst.exe\" \"";
+        T += String(exe_path);
+        T += "/Horst\" ";
+        system(T.c_str());
+    }
 
     return EXIT_SUCCESS;
 }
