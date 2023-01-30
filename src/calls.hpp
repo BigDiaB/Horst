@@ -1,6 +1,6 @@
 #pragma once
 
-void Horst_new(char* target)
+void Horst_new()
 {
     if (proj_list(target,proj_check))
     {
@@ -35,7 +35,7 @@ void Horst_new(char* target)
     system(T.c_str());
 }
 
-void Horst_delete(char* target)
+void Horst_delete()
 {
     proj_list(target,proj_remove);
 
@@ -45,39 +45,77 @@ void Horst_delete(char* target)
     system(T.c_str());
 }
 
-void Horst_build(char* target)
+void Horst_build()
 {
     std::cout << commands[cmd_compile] + "\n" + commands[cmd_link] << std::endl;
-    String T = "cd \"";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build\"";
-    T += " &&" + commands[cmd_compile] + " && " + commands[cmd_link];
-    T += " && rm -f \"";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build/*.o\"";
+    String T = commands[cmd_directory] + " && cd build";
+    T += " && " + commands[cmd_compile] + " && " + commands[cmd_link];
+    T += " && " + commands[cmd_cleanup];
     system(T.c_str());
-}
-void Horst_run(char* target)
-{
-    String T = "cd \"";
-    T += exe_path;
-    T += "/";
-    T += target;
-    T += "/build\"";
-    T += "&& " + commands[cmd_execute];
-    system(T.c_str());
-}
-void Horst_do(char* target)
-{
-    Horst_build(target);
-    Horst_run(target);
 }
 
-typedef void (*Horst_call)(char*);
+void Horst_run()
+{
+    String T = commands[cmd_directory] + " && cd build";
+    T += " && " + commands[cmd_execute];
+    system(T.c_str());
+}
+
+void Horst_do()
+{
+    Horst_build();
+    puts("Finished building...");
+    Horst_run();
+}
+
+void Horst_make()
+{
+    String T = commands[cmd_directory] + " && cd build ";
+    T += " && touch makefile";
+    system(T.c_str());
+
+    String make_template = "all: build run\n\nbuild:\n\tcd " + String(exe_path) + "/" + String(target) + "/build && ";
+    make_template += commands[cmd_compile];
+    make_template += "\n\tcd " + String(exe_path) + "/" + String(target) + "/build && ";
+    make_template += commands[cmd_link];
+    make_template += "\nrun:\n\tcd " + String(exe_path) + "/" + String(target) + "/build && ";
+    make_template += commands[cmd_execute];
+    make_template += "\n.PHONY: all build run";
+
+    std::cout << make_template << std::endl;
+
+    T = exe_path;
+    T += "/";
+    T += target;
+    T += "/makefile";
+
+    FILE* mf = fopen(T.c_str(),"w");
+
+    replace_keywords(make_template);
+
+    fwrite(make_template.c_str(),make_template.size(),1,mf);
+
+    fclose(mf);
+}
+
+void Horst_slib()
+{
+    String T = commands[cmd_directory] + " && cd build";
+    T += " && " + commands[cmd_compile];
+    T += " && " + commands[cmd_staticlib];
+    T += " && " + commands[cmd_cleanup];
+}
+
+
+void Horst_dlib()
+{
+    String T = commands[cmd_directory] + " && cd build";
+    T += " && " + commands[cmd_compile];
+    T += " && " + commands[cmd_dynamiclib];
+    T += " && " + commands[cmd_cleanup];
+}
+
+typedef void (*Horst_call)(void);
 
 enum Horst_call_index {
     HCI_new = 0,
@@ -86,6 +124,11 @@ enum Horst_call_index {
     HCI_build,
     HCI_run,
     HCI_do,
+
+    HCI_slib,
+    HCI_dlib,
+
+    HCI_make,
 
     HCI_NUM_CALLS
 };
@@ -97,6 +140,11 @@ Horst_call Horst_calls[HCI_NUM_CALLS] = {
     Horst_build,
     Horst_run,
     Horst_do,
+
+    Horst_slib,
+    Horst_dlib,
+
+    Horst_make
 };
 
 Horst_call get_call(String call)
@@ -121,6 +169,18 @@ Horst_call get_call(String call)
     else if (call == "do")
     {
         return Horst_calls[HCI_do];
+    }
+    else if (call == "make")
+    {
+        return Horst_calls[HCI_make];
+    }
+    else if (call == "slib")
+    {
+        return Horst_calls[HCI_slib];
+    }
+    else if (call == "dlib")
+    {
+        return Horst_calls[HCI_dlib];
     }
 
     return NULL;

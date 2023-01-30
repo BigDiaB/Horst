@@ -1,6 +1,11 @@
+#ifdef _WIN32
+	#define VERSION_OS "WIN"
+#else
+	#define VERSION_OS "UNIX"
+#endif
 
-#define VERSION_MAJOR "OS:WIN: 15"
-#define VERSION_MINOR 4
+#define VERSION_MAJOR 16
+#define VERSION_MINOR 1
 #define VERSION_PATCH 1
 
 #include "util.hpp"
@@ -8,7 +13,15 @@
 
 int main(int argc, char* argv[])
 {
-    strcpy_s(exe_path,"C:/Users/benjamin Emde/DEV");
+    /*
+    TODO:
+        exe_path von einer Datei einlesen oder so kp, lmfao    
+    */
+    #ifdef _WIN32
+        strcpy_s(exe_path,"C:/Users/benjamin Emde/DEV");
+    #else
+        strcpy(exe_path,"/home/benjaminemde/DEV");
+    #endif
 	chdir(exe_path);
 	
     version();
@@ -57,11 +70,15 @@ int main(int argc, char* argv[])
             get_attributes(String(argv[2]));
         }
     }
+    DEBUG_MSG("setting target");
+    target = String(argv[2]);
+    DEBUG_MSG("set target");
 
     DEBUG_MSG("calling call");
-    requested_call(argv[2]);
+    requested_call();
     DEBUG_MSG("called call");
 
+    #ifdef _WIN32
     if (String(argv[2]) == "Horst")
     {
         String T = "mv \"";
@@ -71,6 +88,7 @@ int main(int argc, char* argv[])
         T += "/Horst\" ";
         system(T.c_str());
     }
+    #endif
 
     return EXIT_SUCCESS;
 }

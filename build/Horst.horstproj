@@ -1,4 +1,4 @@
-gxx: clang++
+gxx: g++
 gxxflags: 
 cxxflags: -g -W -Wall -Wextra -O0 -std=c++17
 out: Horst
@@ -6,7 +6,4 @@ includes:
 lib_path:
 libraries:
 source: ../src/main.cpp
-debugger: none
-dependencies:
-d_type:
 defines:

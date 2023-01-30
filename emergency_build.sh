@@ -1,2 +1,2 @@
-clang++ ../src/main.cpp -o Horst.exe
+cd build && clang++ ../src/main.cpp -o Horst
 

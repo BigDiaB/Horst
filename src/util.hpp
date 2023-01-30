@@ -9,25 +9,43 @@
 
 #include <sys/stat.h>
 
-#include <windows.h>
-#include <direct.h>
-#define chdir _chdir
+#ifdef _WIN32
+    #include <windows.h>
+    #include <direct.h>
+    #define chdir _chdir
+#else
+    #include <unistd.h>
+    #include <string.h>
+#endif
 
 #define String std::string
 #define Vector std::vector
 #define PROJ_LIST_DIR "Horst/build/proj_list.horstproj"
 #define NUM_ATTRIBUTES 9
-#define version() std::cout << "Horst Version: " << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
+#define version() std::cout << "Horst\nOS:\t\t" << VERSION_OS << "\nVersion:\t" << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
 Vector<String> attributes;
 Vector<String> commands;
+String target;
 char exe_path[2056];
+
+String attr_template[NUM_ATTRIBUTES] = {
+    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "defines: "
+};
+
+String vars[NUM_ATTRIBUTES] = {
+    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME", "DEFINES"
+};
 
 enum command_list
 {
     cmd_compile,
     cmd_link,
-    cmd_execute
+    cmd_staticlib,
+    cmd_dynamiclib,
+    cmd_execute,
+    cmd_cleanup,
+    cmd_directory
 };
 
 enum proj_method
@@ -52,23 +70,30 @@ void replace(String& input, String pattern, String replacement)
     input = std::regex_replace(input,pat, replacement.c_str());
 }
 
+void replace_keywords(String& input)
+{
+    for (int j = 0; j < NUM_ATTRIBUTES; j++)
+    {
+        while (input.find(vars[j]) != String::npos)
+        {
+            replace(input,vars[j],attributes[j]);
+        }
+    }
+}
+
 void get_attributes(String target)
 {
     commands.push_back("COMPILER_NAME COMPILER_FLAGS -c SOURCE INCLUDES DEFINES"); //compile standard executable
-    commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME.exe *.o INCLUDES LIB_PATH LIBRARIES"); //link standard executable
-    commands.push_back("EXECUTABLE_NAME.exe");
-
-    String attr_template[NUM_ATTRIBUTES] = {
-    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "defines: "
-    };
-
-    String vars[NUM_ATTRIBUTES] = {
-    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME", "DEFINES"
-    };
+    commands.push_back("COMPILER_NAME LINKER_FLAGS -o EXECUTABLE_NAME *.o INCLUDES LIB_PATH LIBRARIES"); //link standard executable
+    commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a *.o"); //static library
+    commands.push_back("COMPILER_NAME -shared -o libEXECUTABLE_NAME.so SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
+    commands.push_back("./EXECUTABLE_NAME");
+    commands.push_back("rm -f *.o");  //remove obj-files
+    commands.push_back("cd \"" + String(exe_path) + "/" + target + "\""); //cd to target-dir
 
     std::ifstream file;
     file.open(String(exe_path) + "/" + target + "/build/" + target + ".horstproj");
-    while (!file.eof() and file.is_open() and file)
+    while (file and file.is_open() and !file.eof())
     {
         String line;
         std::getline(file, line);
@@ -93,15 +118,10 @@ void get_attributes(String target)
     attributes.clear();
     for (int i = 0; i < NUM_ATTRIBUTES; i++)
         attributes.push_back(temp[i]);
+    
     for (int i = 0; i < (int)commands.size(); i++)
     {
-        for (int j = 0; j < NUM_ATTRIBUTES; j++)
-        {
-            if (commands[i].find(vars[j]) != String::npos)
-            {
-                replace(commands[i],vars[j],attributes[j]);
-            }
-        }
+        replace_keywords(commands[i]);
     }
 }
 
