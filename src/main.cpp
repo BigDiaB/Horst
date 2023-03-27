@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
     #ifdef _WIN32
         strcpy_s(exe_path,"C:/Users/benjamin Emde/DEV");
     #else
-        strcpy(exe_path,"/home/benjaminemde/DEV");
+        strcpy(exe_path,"/home/Benjaminemde/DEV");
     #endif
 	chdir(exe_path);
 	
