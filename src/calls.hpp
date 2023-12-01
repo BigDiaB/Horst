@@ -50,7 +50,8 @@ void Horst_build()
     std::cout << commands[cmd_compile] + "\n" + commands[cmd_link] << std::endl;
     String T = commands[cmd_directory] + " && cd build";
     T += " && " + commands[cmd_compile] + " && " + commands[cmd_link];
-    T += " && " + commands[cmd_cleanup];
+    if (attributes[9] != "dont")
+        T += " && " + commands[cmd_cleanup];
     system(T.c_str());
 }
 
@@ -96,6 +97,8 @@ void Horst_make()
     fwrite(make_template.c_str(),make_template.size(),1,mf);
 
     fclose(mf);
+
+    system(T.c_str());
 }
 
 void Horst_slib()
@@ -104,6 +107,8 @@ void Horst_slib()
     T += " && " + commands[cmd_compile];
     T += " && " + commands[cmd_staticlib];
     T += " && " + commands[cmd_cleanup];
+
+    system(T.c_str());
 }
 
 
@@ -113,6 +118,15 @@ void Horst_dlib()
     T += " && " + commands[cmd_compile];
     T += " && " + commands[cmd_dynamiclib];
     T += " && " + commands[cmd_cleanup];
+
+    system(T.c_str());
+}
+
+void Horst_serve() {
+    String T = commands[cmd_directory];
+    T += "&& " + commands[cmd_server_setup];
+
+    system(T.c_str());
 }
 
 typedef void (*Horst_call)(void);
@@ -129,6 +143,7 @@ enum Horst_call_index {
     HCI_dlib,
 
     HCI_make,
+    HCI_serve,
 
     HCI_NUM_CALLS
 };
@@ -141,10 +156,12 @@ Horst_call Horst_calls[HCI_NUM_CALLS] = {
     Horst_run,
     Horst_do,
 
+
     Horst_slib,
     Horst_dlib,
 
-    Horst_make
+    Horst_make,
+    Horst_serve
 };
 
 Horst_call get_call(String call)
@@ -181,6 +198,10 @@ Horst_call get_call(String call)
     else if (call == "dlib")
     {
         return Horst_calls[HCI_dlib];
+    }
+    else if (call == "serve")
+    {
+        return Horst_calls[HCI_serve];
     }
 
     return NULL;

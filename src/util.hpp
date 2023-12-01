@@ -21,7 +21,7 @@
 #define String std::string
 #define Vector std::vector
 #define PROJ_LIST_DIR "Horst/build/proj_list.horstproj"
-#define NUM_ATTRIBUTES 9
+#define NUM_ATTRIBUTES 10
 #define version() std::cout << "Horst\nOS:\t\t" << VERSION_OS << "\nVersion:\t" << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH << std::endl;
 
 Vector<String> attributes;
@@ -30,11 +30,11 @@ String target;
 char exe_path[2056];
 
 String attr_template[NUM_ATTRIBUTES] = {
-    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "defines: "
+    "gxx: ","gxxflags: ","cxxflags: ", "source:", "lib_path:", "includes:", "libraries: ","out: ", "defines: ", "cleanup: "
 };
 
 String vars[NUM_ATTRIBUTES] = {
-    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME", "DEFINES"
+    "COMPILER_NAME","LINKER_FLAGS","COMPILER_FLAGS","SOURCE","LIB_PATH", "INCLUDES", "LIBRARIES","EXECUTABLE_NAME", "DEFINES", "CLEANUP"
 };
 
 enum command_list
@@ -44,6 +44,7 @@ enum command_list
     cmd_staticlib,
     cmd_dynamiclib,
     cmd_execute,
+    cmd_server_setup,
     cmd_cleanup,
     cmd_directory
 };
@@ -88,6 +89,9 @@ void get_attributes(String target)
     commands.push_back("COMPILER_NAME -c COMPILER_FLAGS DEFINES -o EXECUTABLE_NAME.o INCLUDES SOURCE && ar rc libEXECUTABLE_NAME.a *.o"); //static library
     commands.push_back("COMPILER_NAME -shared -o libEXECUTABLE_NAME.so SOURCE INCLUDES LIB_PATH LIBRARIES"); //dynamic library
     commands.push_back("./EXECUTABLE_NAME");
+
+    commands.push_back("[ ! -e ./build/server.lua ] && cp " + String(exe_path) + "/Horst/build/server.lua ./build/server.lua && cd build && lua server.lua"); // lua script to locally host a website on localhost
+
     commands.push_back("rm -f *.o");  //remove obj-files
     commands.push_back("cd \"" + String(exe_path) + "/" + target + "\""); //cd to target-dir
 

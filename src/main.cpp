@@ -4,9 +4,9 @@
 	#define VERSION_OS "UNIX"
 #endif
 
-#define VERSION_MAJOR 16
-#define VERSION_MINOR 1
-#define VERSION_PATCH 1
+#define VERSION_MAJOR 17
+#define VERSION_MINOR 3
+#define VERSION_PATCH 2
 
 #include "util.hpp"
 #include "calls.hpp"
